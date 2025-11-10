@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>김인성 포트폴리오 | 실전형 업무 시뮬레이터</title>
+    <!-- Tailwind CSS CDN --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN --><script src="https://unpkg.com/lucide-icons"></script>
+    <!-- Google Font: Inter & Noto Sans KR --><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Noto Sans KR (Korean) + Inter (English/Numbers) */
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+        }
+        /* 섹션 제목에 강조 색상 */
+        .section-title {
+            @apply text-3xl font-bold mb-6 text-teal-400 border-b-2 border-teal-600 pb-2;
+        }
+        /* 카드 스타일 */
+        .card {
+            @apply bg-gray-800 p-7 rounded-2xl shadow-xl transition-all duration-300 ease-in-out hover:-translate-y-2 hover:shadow-2xl;
+        }
+        /* 이미지 플레이스홀더 대비 */
+        img {
+            @apply bg-gray-700 rounded-lg;
+        }
+        /* Hero 섹션 배경 그라데이션 */
+        #about::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top left, rgba(42, 53, 76, 0.4) 0%, transparent 40%),
+                        radial-gradient(circle at bottom right, rgba(29, 39, 58, 0.4) 0%, transparent 40%);
+            z-index: -1;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-950 to-gray-900 text-gray-200 antialiased relative">
+
+    <!-- Main Content --><main class="container mx-auto max-w-7xl px-4 py-16 md:py-24">
+
+        <!-- 1. 기본 정보 (Hero & About) --><section id="about" class="mb-20 md:mb-32 relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-900 to-gray-900 p-8 md:p-12 shadow-3xl">
+            <div class="flex flex-col md:flex-row items-center gap-10 md:gap-16 relative z-10">
+                <!-- 프로필 이미지 --><div class="flex-shrink-0">
+                    <img 
+                        src="images/profile_insung.png" 
+                        alt="김인성 프로필 이미지" 
+                        class="w-40 h-40 md:w-56 md:h-56 rounded-full object-cover shadow-3xl border-4 border-teal-500 transform hover:scale-105 transition-transform duration-300"
+                        onerror="this.src='https://placehold.co/224x224/374151/A7F3D0?text=Inseong'"
+                    >
+                </div>
+                
+                <!-- 소개 텍스트 --><div class="text-center md:text-left">
+                    <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-4 leading-tight">김인성</h1>
+                    <p class="text-xl md:text-2xl text-teal-300 font-semibold mb-7 tracking-wide">
+                        Python·Streamlit만으로 “메뉴얼→실전형 시뮬레이션”을 빠르게 구현하는 교육/업무적응 툴 메이커
+                    </p>
+                    
+                    <!-- 연락처 --><div class="flex flex-wrap justify-center md:justify-start gap-x-8 gap-y-4 mb-10 text-lg">
+                        <a href="mailto:rlarladlstjd@gmail.com" class="flex items-center text-gray-300 hover:text-teal-400 transition-colors duration-200">
+                            <i data-lucide="mail" class="w-6 h-6 mr-3"></i>
+                            <span class="font-medium">rlarladlstjd@gmail.com</span>
+                        </a>
+                        <a href="https://github.com/danto7632" target="_blank" rel="noopener noreferrer" class="flex items-center text-gray-300 hover:text-teal-400 transition-colors duration-200">
+                            <i data-lucide="github" class="w-6 h-6 mr-3"></i>
+                            <span class="font-medium">github.com/danto7632</span>
+                        </a>
+                        <span class="flex items-center text-gray-500 cursor-not-allowed">
+                            <i data-lucide="linkedin" class="w-6 h-6 mr-3"></i>
+                            <span class="font-medium">LinkedIn (추후 업데이트)</span>
+                        </span>
+                    </div>
+
+                    <!-- 상세 소개 --><div class="space-y-5 text-gray-300 text-base md:text-lg leading-relaxed max-w-3xl">
+                        <p>
+                            저는 신규 입사자·아르바이트생이 <strong>짧은 시간에 실전처럼</strong> 배우도록, 종이/문서 메뉴얼을 바로 “대화형 시뮬레이션”으로 바꾸는 도구를 Python·Streamlit으로 만듭니다. 기획–설계–개발–운영을 한 흐름으로 묶고, <strong>즉시 피드백·재연습 루프</strong>를 중시합니다.
+                        </p>
+                        <p>
+                            본 프로젝트는 고객/직원 역할을 <strong>양방향</strong>으로 바꿔가며 연습하는 AI 시뮬레이터입니다. 매장/직무 메뉴얼을 업로드하면, 고객 질문을 생성하고(변형·응용 포함), 직원 답변의 정확성·친절도·정책 준수 여부를 자동 피드백합니다. 복잡한 인프라 대신 <strong>Streamlit 멀티페이지</strong> 구조로 빠르게 배포·운영할 수 있게 설계했습니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 프로젝트 상세 --><section id="project-details" class="mb-20 md:mb-32">
+            <h2 class="text-4xl md:text-5xl font-extrabold text-white text-center mb-8">
+                실전형 업무 시뮬레이터 <span class="text-teal-400">for 신입</span>
+            </h2>
+            <p class="text-xl text-gray-400 text-center mb-16 md:mb-20">(고객응대 트레이닝)</p>
+
+            <!-- 프로젝트 메인 이미지 --><img 
+                src="images/cs_simulator_hero.png" 
+                alt="업무 시뮬레이터 메인 이미지" 
+                class="w-full h-auto rounded-3xl shadow-3xl mb-20 md:mb-28 border border-gray-700 object-cover"
+                onerror="this.src='https://placehold.co/1200x600/374151/A7F3D0?text=Project+Hero+Image'"
+            >
+
+            <!-- 문제 정의 & 기술 스택 --><div class="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-14 mb-20 md:mb-28">
+                <div class="card">
+                    <h3 class="section-title text-indigo-400 border-indigo-600">[문제 정의]</h3>
+                    <p class="text-gray-300 leading-relaxed text-base md:text-lg">
+                        신입은 전화/현장 응대 경험이 부족해 <strong>긴장·실수·응답 지연</strong>이 잦고, 메뉴얼은 “읽고 끝”인 경우가 많아 <strong>정책 준수/표현 톤</strong>이 일관되지 않습니다. 교육자는 <strong>반복 코칭</strong>에 시간이 부족하고 케이스 다양화도 어렵습니다. 이 프로젝트는 <strong>AI가 고객·직원 역할을 모두 수행</strong>하고, <strong>메뉴얼 기반+변형 질문</strong>으로 연습 난이도를 조절하며, <strong>자동 피드백</strong>으로 적응 시간을 단축합니다.
+                    </p>
+                </div>
+                <div class="card bg-gray-800 border border-gray-700">
+                    <h3 class="section-title text-indigo-400 border-indigo-600">[전체 기술 스택]</h3>
+                    <div class="space-y-4 text-base md:text-lg">
+                        <p><strong class="text-teal-300">프론트엔드:</strong> <br><span class="text-gray-300">Streamlit(Python UI), Markdown 렌더링, 필요 최소 HTML/CSS 커스터마이징, Plotly(로그/지표 시각화)</span></p>
+                        <p><strong class="text-teal-300">백엔드:</strong> <br><span class="text-gray-300">Python 3.11, Streamlit Session State, SQLite(기본) / PostgreSQL(선택), SQLAlchemy, Pydantic</span></p>
+                        <p><strong class="text-teal-300">DevOps & Tools:</strong> <br><span class="text-gray-300">Git/GitHub, Streamlit Community Cloud(또는 EC2 Docker), OpenAI/Exaone 연동 어댑터, 간단 RAG(FAISS/Chroma 선택), pytest, Black/Ruff</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 아키텍처 --><div class="mb-20 md:mb-28">
+                <h3 class="section-title text-indigo-400 border-indigo-600">[아키텍처/설계]</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-14 items-center">
+                    <div>
+                        <p class="text-gray-300 leading-relaxed mb-6 text-base md:text-lg">
+                            단일 코드베이스의 <strong>Streamlit 멀티페이지 앱</strong> 구조를 채택하여 효율적인 개발과 배포를 목표로 합니다.
+                        </p>
+                        <ul class="list-disc list-inside space-y-3 text-gray-300 text-base md:text-lg pl-4">
+                            <li><strong>자료 업로드/지식화:</strong> 매장/직무 메뉴얼 업로드 → 간단 임베딩 인덱스(FAISS/Chroma 선택) → RAG 컨텍스트 구성</li>
+                            <li><strong>시뮬레이션:</strong> (모드 A) <strong>AI=고객</strong>, 사용자가 직원으로 응답 / (모드 B) <strong>AI=직원</strong>, 사용자가 고객 질문</li>
+                            <li><strong>피드백:</strong> 규칙 체크(금지어/정책 누락/금액·절차 오류) + LLM 루브릭(정확성·친절도·컴플라이언스) → 항목별 코멘트/재연습 가이드</li>
+                            <li><strong>데이터 저장:</strong> SQLite(기본) 또는 PostgreSQL(선택)로 시나리오·대화로그·점수·재시도 이력 관리</li>
+                            <li><strong>배포/운영:</strong> Streamlit Cloud(간편) 또는 Docker+EC2(사내 배포). 모델 어댑터는 <strong>교체형 인터페이스</strong>(OpenAI/Exaone).</li>
+                        </ul>
+                    </div>
+                    <img 
+                        src="images/cs_simulator_streamlit_arch.png" 
+                        alt="Streamlit 아키텍처 다이어그램" 
+                        class="w-full h-auto rounded-xl shadow-2xl border border-gray-700 object-cover"
+                        onerror="this.src='https://placehold.co/600x400/374151/A7F3D0?text=Architecture+Diagram'"
+                    >
+                </div>
+            </div>
+
+            <!-- 핵심 기능 --><div class="mb-20 md:mb-28">
+                <h3 class="section-title text-center text-indigo-400 border-indigo-600">[핵심 기능]</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+                    <!-- 기능 1 --><div class="card flex flex-col">
+                        <img 
+                            src="images/ai_customer_mode.png" 
+                            alt="AI 고객 모드 스크린샷" 
+                            class="w-full h-52 object-cover rounded-lg mb-5 shadow-md border border-gray-700"
+                            onerror="this.src='https://placehold.co/400x200/374151/A7F3D0?text=Feature+1+Screenshot'"
+                        >
+                        <h4 class="text-xl font-bold text-white mb-3">고객 역할 AI 시뮬레이션</h4>
+                        <p class="text-gray-300 text-base leading-relaxed flex-grow">
+                            챗봇 형식으로 <strong>다양한 고객 페르소나·상황</strong>을 생성(예: 초기 불만/환불/재고 문의/예약 변경). 메뉴얼 근거로 <strong>정답 범위</strong>를 유지하면서, <strong>표현만 변형</strong>된 응용 질문을 섞어 <strong>암기식 대응을 방지</strong>합니다. 난이도(톤/압박감/정보 누락 정도)와 주제 태그로 세션을 구성합니다.
+                        </p>
+                    </div>
+                    <!-- 기능 2 --><div class="card flex flex-col">
+                        <img 
+                            src="images/ai_staff_mode.png" 
+                            alt="AI 직원 모드 스크린샷" 
+                            class="w-full h-52 object-cover rounded-lg mb-5 shadow-md border border-gray-700"
+                            onerror="this.src='https://placehold.co/400x200/374151/A7F3D0?text=Feature+2+Screenshot'"
+                        >
+                        <h4 class="text-xl font-bold text-white mb-3">직원 역할 AI 응대 기능</h4>
+                        <p class="text-gray-300 text-base leading-relaxed flex-grow">
+                            사용자가 <strong>고객</strong>이 되어 질문하면, AI가 <strong>메뉴얼 준수형 직원 응답</strong>을 생성합니다. <strong>절차/정책/요금</strong>을 자동 참조하고, <strong>사과/공감 템플릿</strong>을 톤 가이드에 맞춰 반영합니다. 사용자는 <strong>고객 관점</strong>에서 바람직한 응대 흐름을 체험하고, <strong>좋은 답변의 구조</strong>를 학습합니다.
+                        </p>
+                    </div>
+                    <!-- 기능 3 --><div class="card flex flex-col justify-between">
+                        <!-- 이 기능은 이미지가 없으므로 아이콘과 텍스트만 표시합니다. --><div class="text-center mb-5">
+                            <i data-lucide="refresh-cw" class="w-16 h-16 mx-auto text-teal-400 mb-4 animate-spin-slow"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-white mb-3">역할 전환·재연습 루프</h4>
+                        <p class="text-gray-300 text-base leading-relaxed flex-grow">
+                            버튼 한 번으로 <strong>고객↔직원</strong> 전환. 세션 종료 시 <strong>항목별 점수+코칭 포인트</strong> 제공, 부족 영역만 <strong>퀵 재연습</strong>(동일 의도·다른 문장) 지원. 누적 지표(정확성/톤/정책 준수)와 <strong>최근 3회 개선율</strong>을 카드로 표시하여 학습 효과를 극대화합니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 나의 역할 & 성과 --><div class="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-14 mb-20 md:mb-28">
+                <div class="card">
+                    <h3 class="section-title text-indigo-400 border-indigo-600">[나의 역할 및 기여]</h3>
+                    <ul class="list-disc list-inside space-y-3 text-gray-300 text-base md:text-lg pl-4">
+                        <li>Streamlit 멀티페이지 설계(업로드→시뮬레이션→피드백→통계), 상태관리(Session State) 구현</li>
+                        <li>메뉴얼 RAG 파이프라인(간단 임베딩 인덱스, 섹션/정책 태깅) 및 <strong>루브릭 스키마</strong> 정의</li>
+                        <li>금지어/누락 항목 등 <strong>규칙 검증</strong> + LLM 루브릭 평가 병합 로직, 피드백 뷰(항목별 코멘트/개선 TODO)</li>
+                        <li>배포 스크립트(Streamlit Cloud/EC2 Docker) 및 데이터 마이그레이션 가이드 정리</li>
+                    </ul>
+                </div>
+                <div class="card bg-gradient-to-br from-teal-900/30 to-indigo-900/30 border border-teal-700">
+                    <h3 class="section-title text-teal-300 border-teal-600">[결과 및 성과]</h3>
+                    <ul class="list-disc list-inside space-y-3 text-gray-200 text-base md:text-lg pl-4">
+                        <li>파일럿 목표: <strong>초기 응답 시간 30% 단축</strong>, <strong>정책 누락률 40%↓</strong>, <strong>재연습 3회 내 합격률 80%+</strong> <span class="text-sm text-gray-400 font-normal">(초기 지표 수집 예정)</span></li>
+                        <li>교육자 관점: <strong>개별 코칭 시간 절감</strong>, <strong>케이스 다양화 자동화</strong>, 교육 로그로 <strong>현황 파악 용이</strong></li>
+                        <li>학습자 관점: <strong>긴장 완화</strong>, <strong>자신감 향상</strong>, <strong>표현 톤 표준화</strong> 및 <strong>에스컬레이션 기준 명확화</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 회고 --><div>
+                <h3 class="section-title text-center text-indigo-400 border-indigo-600">[회고]</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14">
+                    <div class="card">
+                        <h4 class="text-xl font-bold text-white mb-4 flex items-center"><i data-lucide="lightbulb" class="w-6 h-6 mr-3 text-yellow-400"></i> 배운 점</h4>
+                        <p class="text-gray-300 leading-relaxed text-base md:text-lg">
+                            <strong>메뉴얼의 구조화(정책/예외/톤 가이드 분리)</strong>가 모델 품질보다 중요합니다. 질문을 “의도·정책·감정 톤”으로 태깅하니 난이도 조절과 피드백 명확성이 크게 개선되었습니다. 또한 <strong>Streamlit만으로도</strong> 운영 가능한 속도로 MVP→수업 투입까지 연결할 수 있었습니다.
+                        </p>
+                    </div>
+                    <div class="card">
+                        <h4 class="text-xl font-bold text-white mb-4 flex items-center"><i data-lucide="trending-up" class="w-6 h-6 mr-3 text-green-400"></i> 개선점</h4>
+                        <p class="text-gray-300 leading-relaxed text-base md:text-lg">
+                            음성(STT/TTS) 모드, <strong>상황 카드 에디터</strong>(비매너/컴플레인 시나리오 조합), <strong>현장 KPI 연동</strong>(CS 만족/콜백률)과 <strong>개인화 난이도 곡선</strong>(최근 오류 태그 기반)을 추가해 실전 적합도를 더 높일 계획입니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Footer --><footer class="text-center py-10 mt-16 border-t border-gray-800 bg-gray-950">
+        <p class="text-gray-500 text-sm">
+            &copy; 2024 Inseong Kim. All rights reserved. Made with <span class="text-red-500">&hearts;</span> and <span class="text-blue-400">Tailwind CSS</span>.
+        </p>
+    </footer>
+
+    <!-- Lucide Icons Initializer --><script>
+        lucide.createIcons();
+    </script>
+     <script>
+        // 간단한 스크롤 애니메이션 (선택 사항)
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
