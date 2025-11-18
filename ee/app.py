@@ -175,50 +175,60 @@ def search_knowledge_base(query: str, collection, embedding_model, top_k: int = 
 
 # 시뮬레이션 AI 함수들
 def generate_customer_scenario(context: str, model_name: str) -> Dict[str, str]:
-    """고객 시나리오 생성"""
+    """고객 시나리오 생성 (파싱 강화 버전)"""
     try:
-        prompt = f"""다음 업무 매뉴얼을 바탕으로 고객 시나리오를 생성해주세요:
+        prompt = f"""
+당신은 콜센터/매장 고객입니다. 아래 업무 매뉴얼을 참고해서,
+실제 업무에서 자주 나올 법한 고객 상황 1가지만 만드세요.
 
-매뉴얼 내용:
+[출력 형식 - 이 형식 그대로, 다른 문장 쓰지 말 것]
+
+상황: (고객이 처한 상황을 한 줄로)
+고객 유형: (예: 일반 고객 / 급한 고객 / 까다로운 고객 등)
+고객 첫 말: (직원에게 처음 건네는 한 문장)
+
+업무 매뉴얼:
 {context[:1500]}
-
-다음 형식으로 고객 시나리오를 만들어주세요:
-상황: [고객이 처한 상황]
-고객 유형: [일반/까다로운/급한 등]
-첫 말: [고객이 처음 할 말]
-
-실제 업무에서 자주 발생할 수 있는 상황으로 만들어주세요."""
+""".strip()
 
         response = ollama.chat(
             model=model_name,
             messages=[{'role': 'user', 'content': prompt}]
         )
-        
-        content = response['message']['content']
-        
-        # 응답 파싱
-        lines = content.split('\n')
+        content = response['message']['content'].strip()
+
         scenario = {
             'situation': '',
             'customer_type': '',
             'first_message': ''
         }
-        
-        for line in lines:
-            if '상황:' in line:
-                scenario['situation'] = line.split('상황:')[-1].strip()
-            elif '고객 유형:' in line:
-                scenario['customer_type'] = line.split('고객 유형:')[-1].strip()
-            elif '첫 말:' in line or '첫번째 말:' in line:
-                scenario['first_message'] = line.split(':')[-1].strip()
-        
+
+        for line in content.splitlines():
+            line = line.strip()
+            if line.startswith("상황:"):
+                scenario['situation'] = line.split("상황:", 1)[1].strip()
+            elif line.startswith("고객 유형:"):
+                scenario['customer_type'] = line.split("고객 유형:", 1)[1].strip()
+            elif line.startswith("고객 첫 말:") or line.startswith("첫 말:") or "첫 말:" in line:
+                scenario['first_message'] = line.split(":", 1)[1].strip().strip('"“”')
+
+        # LLM이 말을 안 듣더라도 기본값 채우기
+        if not scenario['situation']:
+            scenario['situation'] = "상품과 서비스에 대해 문의하기 위해 전화를 건 고객"
+        if not scenario['customer_type']:
+            scenario['customer_type'] = "일반 고객"
+        if not scenario['first_message']:
+            scenario['first_message'] = "안녕하세요, 상품 관련해서 몇 가지 문의드리고 싶습니다."
+
         return scenario
-    except Exception as e:
+
+    except Exception:
         return {
             'situation': '일반적인 문의 상황',
             'customer_type': '일반 고객',
             'first_message': '안녕하세요, 문의사항이 있어서 연락드렸습니다.'
         }
+
 
 def customer_ai_response(user_message: str, context: str, scenario: Dict, model_name: str) -> str:
     """고객 AI 응답 생성"""
@@ -346,7 +356,7 @@ def main():
         
         model_name = st.selectbox(
             "AI 모델 선택",
-            ["exaone3.5:2.4b", "llama3.2", "gemma2"],
+            ["exaone3.5:2.4b-jetson", "llama3.2", "gemma2"],
             index=0
         )
         
@@ -622,3 +632,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
