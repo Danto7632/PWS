@@ -87,13 +87,13 @@ def extract_text_from_pdf(pdf_file) -> str:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
             tmp_file.write(pdf_file.getvalue())
             tmp_file_path = tmp_file.name
-        
+
         text = ""
         with open(tmp_file_path, 'rb') as file:
             pdf_reader = PyPDF2.PdfReader(file)
             for page in pdf_reader.pages:
                 text += page.extract_text() + "\n"
-        
+
         os.unlink(tmp_file_path)
         return text
     except Exception as e:
@@ -123,7 +123,7 @@ def extract_text_from_excel(excel_file) -> str:
 def process_uploaded_file(uploaded_file) -> str:
     """업로드된 파일에서 텍스트 추출"""
     file_type = uploaded_file.type
-    
+
     if file_type == "application/pdf":
         return extract_text_from_pdf(uploaded_file)
     elif file_type == "text/plain":
@@ -147,14 +147,14 @@ def chunk_text(text: str, chunk_size: int = 800, overlap: int = 100) -> List[str
 
 def create_knowledge_base(chunks: List[str], embedding_model, collection_name: str = "work_manual"):
     client = init_chroma_client()
-    
+
     try:
         client.delete_collection(name=collection_name)
     except:
         pass
-    
+
     collection = client.create_collection(name=collection_name)
-    
+
     for i, chunk in enumerate(chunks):
         embedding = embedding_model.encode(chunk).tolist()
         collection.add(
@@ -162,7 +162,7 @@ def create_knowledge_base(chunks: List[str], embedding_model, collection_name: s
             documents=[chunk],
             ids=[f"chunk_{i}"]
         )
-    
+
     return collection
 
 def search_knowledge_base(query: str, collection, embedding_model, top_k: int = 3) -> List[str]:
@@ -175,20 +175,24 @@ def search_knowledge_base(query: str, collection, embedding_model, top_k: int = 
 
 # 시뮬레이션 AI 함수들
 def generate_customer_scenario(context: str, model_name: str) -> Dict[str, str]:
-    """고객 시나리오 생성 (파싱 강화 버전)"""
+    """업로드한 매뉴얼 내용을 바탕으로 고객 시나리오 생성"""
     try:
         prompt = f"""
-당신은 콜센터/매장 고객입니다. 아래 업무 매뉴얼을 참고해서,
-실제 업무에서 자주 나올 법한 고객 상황 1가지만 만드세요.
+당신은 아래 매뉴얼에 나오는 서비스/업무의 고객 또는 사용자입니다.
 
-[출력 형식 - 이 형식 그대로, 다른 문장 쓰지 말 것]
-
-상황: (고객이 처한 상황을 한 줄로)
-고객 유형: (예: 일반 고객 / 급한 고객 / 까다로운 고객 등)
-고객 첫 말: (직원에게 처음 건네는 한 문장)
-
-업무 매뉴얼:
+[업무/서비스 매뉴얼 발췌]
 {context[:1500]}
+
+위 매뉴얼의 주제와 용어를 벗어나지 말고,
+실제 현장에서 자주 나올 법한 고객 문의 상황 1개만 만드세요.
+
+반드시 매뉴얼의 내용과 직접 관련된 문의여야 하며,
+매뉴얼에 없는 새로운 종류의 상품/서비스(옷, 재킷, 음식, 택배, 항공권 등)는 만들지 마세요.
+
+[출력 형식 - 이 형식 그대로]
+상황: (고객이 처한 상황을 한 줄로)
+고객 유형: (예: 일반 고객 / 초보 학습자 / 컴퓨터에 익숙하지 않은 고객 등)
+고객 첫 말: (직원에게 처음 건네는 한 문장)
 """.strip()
 
         response = ollama.chat(
@@ -209,16 +213,16 @@ def generate_customer_scenario(context: str, model_name: str) -> Dict[str, str]:
                 scenario['situation'] = line.split("상황:", 1)[1].strip()
             elif line.startswith("고객 유형:"):
                 scenario['customer_type'] = line.split("고객 유형:", 1)[1].strip()
-            elif line.startswith("고객 첫 말:") or line.startswith("첫 말:") or "첫 말:" in line:
+            elif line.startswith("고객 첫 말:") or line.startswith("첫 말:") or "고객 첫 말:" in line:
                 scenario['first_message'] = line.split(":", 1)[1].strip().strip('"“”')
 
         # LLM이 말을 안 듣더라도 기본값 채우기
         if not scenario['situation']:
-            scenario['situation'] = "상품과 서비스에 대해 문의하기 위해 전화를 건 고객"
+            scenario['situation'] = "매뉴얼에 나온 내용을 문의하기 위해 연락한 고객"
         if not scenario['customer_type']:
             scenario['customer_type'] = "일반 고객"
         if not scenario['first_message']:
-            scenario['first_message'] = "안녕하세요, 상품 관련해서 몇 가지 문의드리고 싶습니다."
+            scenario['first_message'] = "안녕하세요, 매뉴얼 내용 관련해서 몇 가지 문의드리고 싶습니다."
 
         return scenario
 
@@ -231,26 +235,32 @@ def generate_customer_scenario(context: str, model_name: str) -> Dict[str, str]:
 
 
 def customer_ai_response(user_message: str, context: str, scenario: Dict, model_name: str) -> str:
-    """고객 AI 응답 생성"""
+    """고객 AI 응답 생성 (매뉴얼 기반)"""
     try:
-        prompt = f"""당신은 다음 상황의 고객입니다:
+        prompt = f"""당신은 다음 상황의 고객입니다.
+
+[업무/서비스 매뉴얼 발췌]
+{context[:800]}
 
 상황: {scenario.get('situation', '')}
 고객 유형: {scenario.get('customer_type', '')}
 
-현재까지의 대화와 직원의 응답을 보고, 고객으로서 자연스럽게 대답해주세요.
+위 매뉴얼의 주제와 용어를 벗어나지 말고,
+직원의 답변을 들은 뒤 이어질 다음 고객 질문/반응을 한 문장으로만 작성하세요.
+매뉴얼에 없는 새로운 종류의 상품/서비스(옷, 재킷, 음식, 택배 등)는 언급하지 마세요.
+
 직원 응답: {user_message}
 
-고객답변 (50자 이내로 간단히):"""
+고객 답변 (50자 이내, 한 문장):"""
 
         response = ollama.chat(
             model=model_name,
             messages=[{'role': 'user', 'content': prompt}]
         )
-        
+
         return response['message']['content'].strip()
-    except Exception as e:
-        return "네, 알겠습니다. 감사합니다."
+    except Exception:
+        return "네, 알겠습니다. 안내해 주신 내용으로 진행해 볼게요."
 
 def employee_ai_response(user_message: str, context: str, model_name: str) -> str:
     """직원 AI 응답 생성"""
@@ -268,9 +278,9 @@ def employee_ai_response(user_message: str, context: str, model_name: str) -> st
             model=model_name,
             messages=[{'role': 'user', 'content': prompt}]
         )
-        
+
         return response['message']['content'].strip()
-    except Exception as e:
+    except Exception:
         return "죄송합니다. 확인 후 다시 안내해드리겠습니다."
 
 def evaluate_response(user_response: str, context: str, model_name: str) -> Dict[str, any]:
@@ -300,9 +310,9 @@ def evaluate_response(user_response: str, context: str, model_name: str) -> Dict
             model=model_name,
             messages=[{'role': 'user', 'content': prompt}]
         )
-        
+
         content = response['message']['content']
-        
+
         # 점수 추출
         total_score = 12  # 기본 점수
         try:
@@ -311,13 +321,13 @@ def evaluate_response(user_response: str, context: str, model_name: str) -> Dict
                 total_score = int(score_line.split('/')[0].split(':')[-1].strip())
         except:
             pass
-        
+
         return {
             'score': total_score,
             'max_score': 15,
             'feedback': content
         }
-    except Exception as e:
+    except Exception:
         return {
             'score': 10,
             'max_score': 15,
@@ -329,39 +339,39 @@ def main():
     # 헤더
     st.markdown('<div class="main-header">🎯 실전형 업무 시뮬레이터 for 신입</div>', unsafe_allow_html=True)
     st.markdown("### 💼 신입 직원을 위한 고객 응대 연습 도구")
-    
+
     # 사이드바 - 설정 및 문서 업로드
     with st.sidebar:
         st.header("📚 업무 매뉴얼 업로드")
-        
+
         uploaded_files = st.file_uploader(
             "매뉴얼 파일들을 업로드하세요",
             type=['pdf', 'txt', 'xlsx', 'xls'],
             accept_multiple_files=True,
             help="PDF, TXT, Excel 파일을 지원합니다"
         )
-        
+
         st.header("⚙️ AI 설정")
-        
+
         # Ollama 연결 확인
         if 'ollama_connected' not in st.session_state:
             with st.spinner("🔍 AI 시스템 연결 확인 중..."):
                 connected, result = check_ollama_connection()
                 st.session_state['ollama_connected'] = connected
-        
+
         if st.session_state['ollama_connected']:
             st.success("✅ AI 시스템 연결됨")
         else:
             st.error("❌ AI 시스템 연결 실패")
-        
+
         model_name = st.selectbox(
             "AI 모델 선택",
             ["exaone3.5:2.4b-jetson", "llama3.2", "gemma2"],
             index=0
         )
-        
+
         st.header("📊 학습 통계")
-        
+
         # 세션 통계 초기화
         if 'stats' not in st.session_state:
             st.session_state.stats = {
@@ -371,9 +381,9 @@ def main():
                 'avg_score': 0,
                 'total_score': 0
             }
-        
+
         stats = st.session_state.stats
-        
+
         st.markdown(f"""
         <div class="stats-card">
             <h4>총 시뮬레이션: {stats['total_simulations']}</h4>
@@ -385,7 +395,7 @@ def main():
             <h4>직원 역할: {stats['employee_role_count']}</h4>
         </div>
         """, unsafe_allow_html=True)
-    
+
     # 메인 컨텐츠
     if uploaded_files:
         # 문서 처리
@@ -395,28 +405,28 @@ def main():
                 for file in uploaded_files:
                     text = process_uploaded_file(file)
                     all_text += f"\n\n=== {file.name} ===\n{text}"
-                
+
                 if all_text:
                     st.success(f"✅ {len(uploaded_files)}개 파일 처리 완료!")
-                    
+
                     # 지식 베이스 생성
                     embedding_model = init_embedding_model()
                     chunks = chunk_text(all_text)
                     collection = create_knowledge_base(chunks, embedding_model)
-                    
+
                     st.session_state['knowledge_base'] = collection
                     st.session_state['embedding_model'] = embedding_model
                     st.session_state['manual_content'] = all_text
-                    
+
                     st.info(f"📖 총 {len(chunks)}개 학습 단위로 분할 완료")
-        
+
         # 시뮬레이션 섹션
         if 'knowledge_base' in st.session_state:
             st.markdown("---")
-            
+
             # 역할 선택
             col1, col2 = st.columns(2)
-            
+
             with col1:
                 st.markdown("""
                 <div class="simulation-box">
@@ -424,14 +434,14 @@ def main():
                     <p>AI가 직원이 되어 고객인 당신의 문의에 응답합니다.</p>
                 </div>
                 """, unsafe_allow_html=True)
-                
+
                 if st.button("고객으로 연습하기", key="customer_practice"):
                     st.session_state.current_role = "customer"
                     st.session_state.simulation_active = True
                     st.session_state.conversation_history = []
                     st.session_state.stats['customer_role_count'] += 1
                     st.rerun()
-            
+
             with col2:
                 st.markdown("""
                 <div class="simulation-box">
@@ -439,35 +449,31 @@ def main():
                     <p>AI가 다양한 고객이 되어 당신이 응대해야 할 상황을 만듭니다.</p>
                 </div>
                 """, unsafe_allow_html=True)
-                
+
                 if st.button("직원으로 연습하기", key="employee_practice"):
                     st.session_state.current_role = "employee"
                     st.session_state.simulation_active = True
                     st.session_state.conversation_history = []
                     st.session_state.stats['employee_role_count'] += 1
-                    
-                    # 고객 시나리오 생성
-                    context = search_knowledge_base(
-                        "고객 문의", 
-                        st.session_state['knowledge_base'],
-                        st.session_state['embedding_model']
-                    )
-                    scenario = generate_customer_scenario(" ".join(context), model_name)
+
+                    # 고객 시나리오 생성: 전체 매뉴얼 기반
+                    manual_text = st.session_state.get('manual_content', '')
+                    scenario = generate_customer_scenario(manual_text, model_name)
                     st.session_state.customer_scenario = scenario
-                    
+
                     st.rerun()
-            
+
             # 시뮬레이션 실행
             if hasattr(st.session_state, 'simulation_active') and st.session_state.simulation_active:
                 st.markdown("---")
-                
+
                 # 현재 역할 표시
                 if st.session_state.current_role == "customer":
                     st.markdown('<div class="role-badge customer-badge">👤 당신의 역할: 고객</div>', unsafe_allow_html=True)
                     st.markdown("**💡 상황:** AI 직원에게 문의사항을 말해보세요.")
                 else:
                     st.markdown('<div class="role-badge employee-badge">👔 당신의 역할: 직원</div>', unsafe_allow_html=True)
-                    
+
                     # 고객 시나리오 표시
                     scenario = st.session_state.get('customer_scenario', {})
                     if scenario:
@@ -476,23 +482,23 @@ def main():
                         **👥 고객 유형:** {scenario.get('customer_type', '')}  
                         **💬 고객 첫 말:** "{scenario.get('first_message', '')}"
                         """)
-                
+
                 # 대화 히스토리
                 if 'conversation_history' not in st.session_state:
                     st.session_state.conversation_history = []
-                
+
                 # 직원 모드일 때 첫 고객 메시지 추가
-                if (st.session_state.current_role == "employee" and 
-                    not st.session_state.conversation_history and 
+                if (st.session_state.current_role == "employee" and
+                    not st.session_state.conversation_history and
                     'customer_scenario' in st.session_state):
-                    
+
                     first_msg = st.session_state.customer_scenario.get('first_message', '')
                     if first_msg:
                         st.session_state.conversation_history.append({
                             'role': 'customer_ai',
                             'message': first_msg
                         })
-                
+
                 # 대화 표시
                 for msg in st.session_state.conversation_history:
                     if msg['role'] == 'user':
@@ -502,28 +508,26 @@ def main():
                         else:
                             with st.chat_message("user"):
                                 st.markdown(f"**직원 (당신):** {msg['message']}")
-                    
                     elif msg['role'] == 'employee_ai':
                         with st.chat_message("assistant"):
                             st.markdown(f"**AI 직원:** {msg['message']}")
-                    
                     elif msg['role'] == 'customer_ai':
                         with st.chat_message("assistant"):
                             st.markdown(f"**AI 고객:** {msg['message']}")
-                
+
                 # 사용자 입력
                 if st.session_state.current_role == "customer":
                     user_input = st.chat_input("고객으로서 문의사항을 입력하세요...")
                 else:
                     user_input = st.chat_input("직원으로서 응답을 입력하세요...")
-                
+
                 if user_input:
                     # 사용자 메시지 추가 (고객/직원 공통)
                     st.session_state.conversation_history.append({
                         'role': 'user',
                         'message': user_input
                     })
-                
+
                     # 매뉴얼 기반 컨텍스트 검색
                     context = search_knowledge_base(
                         user_input,
@@ -531,7 +535,7 @@ def main():
                         st.session_state['embedding_model']
                     )
                     context_text = " ".join(context)
-                
+
                     if st.session_state.current_role == "customer":
                         # 👤 고객 역할: AI가 직원으로 응답
                         ai_response = employee_ai_response(user_input, context_text, model_name)
@@ -539,14 +543,14 @@ def main():
                             'role': 'employee_ai',
                             'message': ai_response
                         })
-                
+
                     else:
                         # 👔 직원 역할: 내가 답변 → 평가 + 다음 고객 질문 자동 생성
-                
+
                         # 1) 내 답변 평가
                         evaluation = evaluate_response(user_input, context_text, model_name)
                         st.session_state.last_evaluation = evaluation
-                
+
                         # 2) 통계 업데이트
                         stats = st.session_state.stats
                         stats['total_score'] += evaluation['score']
@@ -555,14 +559,12 @@ def main():
                             stats['total_score'] / stats['total_simulations']
                             if stats['total_simulations'] > 0 else 0
                         )
-                
-                        # 3) 다음 고객 시나리오 생성
-                        kb = st.session_state['knowledge_base']
-                        emb_model = st.session_state['embedding_model']
-                        next_ctx = search_knowledge_base("고객 문의", kb, emb_model)
-                        next_scenario = generate_customer_scenario(" ".join(next_ctx), model_name)
+
+                        # 3) 다음 고객 시나리오 생성 (전체 매뉴얼 기반)
+                        manual_text = st.session_state.get('manual_content', '')
+                        next_scenario = generate_customer_scenario(manual_text, model_name)
                         st.session_state.customer_scenario = next_scenario
-                
+
                         # 4) 새 고객의 "첫 말"을 바로 채팅창에 추가
                         next_first = next_scenario.get('first_message', '')
                         if next_first:
@@ -570,54 +572,43 @@ def main():
                                 'role': 'customer_ai',
                                 'message': next_first
                             })
-                
+
                     st.rerun()
 
-                
                 # 평가 결과 표시 (직원 모드)
-                if (st.session_state.current_role == "employee" and 
+                if (st.session_state.current_role == "employee" and
                     hasattr(st.session_state, 'last_evaluation')):
-                    
+
                     eval_data = st.session_state.last_evaluation
-                    
+
                     st.markdown("### 📊 응답 평가")
-                    
+
                     col_eval1, col_eval2 = st.columns([1, 2])
-                    
+
                     with col_eval1:
                         score_percentage = (eval_data['score'] / eval_data['max_score']) * 100
                         st.metric("점수", f"{eval_data['score']}/{eval_data['max_score']}", f"{score_percentage:.0f}%")
-                    
+
                     with col_eval2:
                         st.text_area("상세 피드백", eval_data['feedback'], height=100, disabled=True)
-                    
-                    # 통계 업데이트
-                    st.session_state.stats['total_score'] += eval_data['score']
-                    st.session_state.stats['total_simulations'] += 1
-                    if st.session_state.stats['total_simulations'] > 0:
-                        st.session_state.stats['avg_score'] = st.session_state.stats['total_score'] / st.session_state.stats['total_simulations']
-                
+
                 # 시뮬레이션 종료 버튼
                 col_end1, col_end2 = st.columns([1, 1])
                 with col_end1:
                     if st.button("🔄 새 시나리오 시작"):
                         st.session_state.conversation_history = []
                         if st.session_state.current_role == "employee":
-                            # 새로운 고객 시나리오 생성
-                            context = search_knowledge_base(
-                                "고객 문의",
-                                st.session_state['knowledge_base'],
-                                st.session_state['embedding_model']
-                            )
-                            scenario = generate_customer_scenario(" ".join(context), model_name)
+                            # 새로운 고객 시나리오 생성 (전체 매뉴얼 기반)
+                            manual_text = st.session_state.get('manual_content', '')
+                            scenario = generate_customer_scenario(manual_text, model_name)
                             st.session_state.customer_scenario = scenario
                         st.rerun()
-                
+
                 with col_end2:
                     if st.button("❌ 시뮬레이션 종료"):
                         st.session_state.simulation_active = False
                         st.rerun()
-    
+
     else:
         # 소개 섹션
         st.markdown("""
@@ -652,5 +643,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
