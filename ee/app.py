@@ -518,41 +518,61 @@ def main():
                     user_input = st.chat_input("직원으로서 응답을 입력하세요...")
                 
                 if user_input:
-                    # 사용자 메시지 추가
+                    # 사용자 메시지 추가 (고객/직원 공통)
                     st.session_state.conversation_history.append({
                         'role': 'user',
                         'message': user_input
                     })
-                    
-                    # AI 응답 생성
+                
+                    # 매뉴얼 기반 컨텍스트 검색
                     context = search_knowledge_base(
                         user_input,
                         st.session_state['knowledge_base'],
                         st.session_state['embedding_model']
                     )
                     context_text = " ".join(context)
-                    
+                
                     if st.session_state.current_role == "customer":
-                        # 직원 AI 응답
+                        # 👤 고객 역할: AI가 직원으로 응답
                         ai_response = employee_ai_response(user_input, context_text, model_name)
                         st.session_state.conversation_history.append({
                             'role': 'employee_ai',
                             'message': ai_response
                         })
+                
                     else:
-                        # 고객 AI 응답
-                        scenario = st.session_state.get('customer_scenario', {})
-                        ai_response = customer_ai_response(user_input, context_text, scenario, model_name)
-                        st.session_state.conversation_history.append({
-                            'role': 'customer_ai',
-                            'message': ai_response
-                        })
-                        
-                        # 직원 응답 평가
+                        # 👔 직원 역할: 내가 답변 → 평가 + 다음 고객 질문 자동 생성
+                
+                        # 1) 내 답변 평가
                         evaluation = evaluate_response(user_input, context_text, model_name)
                         st.session_state.last_evaluation = evaluation
-                    
+                
+                        # 2) 통계 업데이트
+                        stats = st.session_state.stats
+                        stats['total_score'] += evaluation['score']
+                        stats['total_simulations'] += 1
+                        stats['avg_score'] = (
+                            stats['total_score'] / stats['total_simulations']
+                            if stats['total_simulations'] > 0 else 0
+                        )
+                
+                        # 3) 다음 고객 시나리오 생성
+                        kb = st.session_state['knowledge_base']
+                        emb_model = st.session_state['embedding_model']
+                        next_ctx = search_knowledge_base("고객 문의", kb, emb_model)
+                        next_scenario = generate_customer_scenario(" ".join(next_ctx), model_name)
+                        st.session_state.customer_scenario = next_scenario
+                
+                        # 4) 새 고객의 "첫 말"을 바로 채팅창에 추가
+                        next_first = next_scenario.get('first_message', '')
+                        if next_first:
+                            st.session_state.conversation_history.append({
+                                'role': 'customer_ai',
+                                'message': next_first
+                            })
+                
                     st.rerun()
+
                 
                 # 평가 결과 표시 (직원 모드)
                 if (st.session_state.current_role == "employee" and 
@@ -632,4 +652,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
