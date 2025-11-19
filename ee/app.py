@@ -12,6 +12,17 @@ import random
 import time
 warnings.filterwarnings("ignore")
 
+# 선택적 LLM 라이브러리
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None
+
+try:
+    import google.generativeai as genai
+except ImportError:
+    genai = None
+
 # Streamlit 페이지 설정
 st.set_page_config(
     page_title="실전형 업무 시뮬레이터 for 신입",
@@ -63,12 +74,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ChromaDB 클라이언트 초기화
+# -----------------------------
+# Chroma / Embedding 초기화
+# -----------------------------
 @st.cache_resource
 def init_chroma_client():
     return chromadb.PersistentClient(path="./work_simulator_db")
 
-# Sentence Transformer 모델 초기화
 @st.cache_resource
 def init_embedding_model():
     return SentenceTransformer('all-MiniLM-L6-v2')
@@ -81,7 +93,9 @@ def check_ollama_connection():
     except Exception as e:
         return False, str(e)
 
-# 문서 처리 함수들
+# -----------------------------
+# 문서 처리 함수
+# -----------------------------
 def extract_text_from_pdf(pdf_file) -> str:
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
@@ -113,7 +127,6 @@ def extract_text_from_txt(txt_file) -> str:
 def extract_text_from_excel(excel_file) -> str:
     try:
         df = pd.read_excel(excel_file)
-        # DataFrame을 문자열로 변환
         text = df.to_string(index=False)
         return text
     except Exception as e:
@@ -128,7 +141,10 @@ def process_uploaded_file(uploaded_file) -> str:
         return extract_text_from_pdf(uploaded_file)
     elif file_type == "text/plain":
         return extract_text_from_txt(uploaded_file)
-    elif file_type in ["application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
+    elif file_type in [
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    ]:
         return extract_text_from_excel(uploaded_file)
     else:
         st.error(f"지원하지 않는 파일 형식: {file_type}")
@@ -140,7 +156,7 @@ def chunk_text(text: str, chunk_size: int = 800, overlap: int = 100) -> List[str
     while start < len(text):
         end = start + chunk_size
         chunk = text[start:end]
-        if chunk.strip():  # 빈 청크 제외
+        if chunk.strip():
             chunks.append(chunk)
         start = end - overlap
     return chunks
@@ -173,8 +189,71 @@ def search_knowledge_base(query: str, collection, embedding_model, top_k: int = 
     )
     return results['documents'][0] if results['documents'] else []
 
+# -----------------------------
+# 공통 LLM 호출 함수
+# -----------------------------
+def call_llm(prompt: str) -> str:
+    provider = st.session_state.get("llm_provider", "ollama")
+    model_name = st.session_state.get("model_name", "exaone3.5:2.4b-jetson")
+
+    # 1) 로컬 Ollama
+    if provider == "ollama":
+        try:
+            resp = ollama.chat(
+                model=model_name,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return resp["message"]["content"].strip()
+        except Exception as e:
+            st.error(f"로컬 Ollama 호출 중 오류: {e}")
+            return ""
+
+    # 2) OpenAI GPT
+    elif provider == "openai":
+        api_key = st.session_state.get("openai_api_key", "")
+        if not api_key:
+            st.error("OpenAI API Key를 입력하세요.")
+            return ""
+        if OpenAI is None:
+            st.error("openai 패키지가 설치되어 있지 않습니다. `pip install openai` 후 다시 실행하세요.")
+            return ""
+        try:
+            client = OpenAI(api_key=api_key)
+            response = client.chat.completions.create(
+                model=model_name,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            st.error(f"OpenAI 호출 중 오류: {e}")
+            return ""
+
+    # 3) Google Gemini
+    elif provider == "gemini":
+        api_key = st.session_state.get("gemini_api_key", "")
+        if not api_key:
+            st.error("Gemini API Key를 입력하세요.")
+            return ""
+        if genai is None:
+            st.error("google-generativeai 패키지가 설치되어 있지 않습니다. `pip install google-generativeai` 후 다시 실행하세요.")
+            return ""
+        try:
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as e:
+            st.error(f"Gemini 호출 중 오류: {e}")
+            return ""
+
+    else:
+        st.error("지원하지 않는 LLM 공급자입니다.")
+        return ""
+
+# -----------------------------
 # 시뮬레이션 AI 함수들
-def generate_customer_scenario(context: str, model_name: str) -> Dict[str, str]:
+# -----------------------------
+def generate_customer_scenario(context: str) -> Dict[str, str]:
     """업로드한 매뉴얼 내용을 바탕으로 고객 시나리오 생성"""
     try:
         prompt = f"""
@@ -195,11 +274,7 @@ def generate_customer_scenario(context: str, model_name: str) -> Dict[str, str]:
 고객 첫 말: (직원에게 처음 건네는 한 문장)
 """.strip()
 
-        response = ollama.chat(
-            model=model_name,
-            messages=[{'role': 'user', 'content': prompt}]
-        )
-        content = response['message']['content'].strip()
+        content = call_llm(prompt).strip()
 
         scenario = {
             'situation': '',
@@ -216,7 +291,6 @@ def generate_customer_scenario(context: str, model_name: str) -> Dict[str, str]:
             elif line.startswith("고객 첫 말:") or line.startswith("첫 말:") or "고객 첫 말:" in line:
                 scenario['first_message'] = line.split(":", 1)[1].strip().strip('"“”')
 
-        # LLM이 말을 안 듣더라도 기본값 채우기
         if not scenario['situation']:
             scenario['situation'] = "매뉴얼에 나온 내용을 문의하기 위해 연락한 고객"
         if not scenario['customer_type']:
@@ -233,8 +307,7 @@ def generate_customer_scenario(context: str, model_name: str) -> Dict[str, str]:
             'first_message': '안녕하세요, 문의사항이 있어서 연락드렸습니다.'
         }
 
-
-def customer_ai_response(user_message: str, context: str, scenario: Dict, model_name: str) -> str:
+def customer_ai_response(user_message: str, context: str, scenario: Dict) -> str:
     """고객 AI 응답 생성 (매뉴얼 기반)"""
     try:
         prompt = f"""당신은 다음 상황의 고객입니다.
@@ -253,16 +326,11 @@ def customer_ai_response(user_message: str, context: str, scenario: Dict, model_
 
 고객 답변 (50자 이내, 한 문장):"""
 
-        response = ollama.chat(
-            model=model_name,
-            messages=[{'role': 'user', 'content': prompt}]
-        )
-
-        return response['message']['content'].strip()
+        return call_llm(prompt).strip()
     except Exception:
         return "네, 알겠습니다. 안내해 주신 내용으로 진행해 볼게요."
 
-def employee_ai_response(user_message: str, context: str, model_name: str) -> str:
+def employee_ai_response(user_message: str, context: str) -> str:
     """직원 AI 응답 생성"""
     try:
         prompt = f"""다음 업무 매뉴얼을 참고하여 고객 문의에 전문적이고 친절하게 응답해주세요:
@@ -274,16 +342,11 @@ def employee_ai_response(user_message: str, context: str, model_name: str) -> st
 
 친절하고 정확한 직원 응답 (100자 이내):"""
 
-        response = ollama.chat(
-            model=model_name,
-            messages=[{'role': 'user', 'content': prompt}]
-        )
-
-        return response['message']['content'].strip()
+        return call_llm(prompt).strip()
     except Exception:
         return "죄송합니다. 확인 후 다시 안내해드리겠습니다."
 
-def evaluate_response(user_response: str, context: str, model_name: str) -> Dict[str, any]:
+def evaluate_response(user_response: str, context: str) -> Dict[str, any]:
     """사용자 응답 평가"""
     try:
         prompt = f"""다음 업무 매뉴얼을 기준으로 직원의 고객 응답을 평가해주세요:
@@ -306,15 +369,9 @@ def evaluate_response(user_response: str, context: str, model_name: str) -> Dict
 총점: X/15
 개선점: 구체적인 개선 제안"""
 
-        response = ollama.chat(
-            model=model_name,
-            messages=[{'role': 'user', 'content': prompt}]
-        )
+        content = call_llm(prompt)
 
-        content = response['message']['content']
-
-        # 점수 추출
-        total_score = 12  # 기본 점수
+        total_score = 12
         try:
             if '총점:' in content:
                 score_line = [line for line in content.split('\n') if '총점:' in line][0]
@@ -334,7 +391,9 @@ def evaluate_response(user_response: str, context: str, model_name: str) -> Dict
             'feedback': '평가 중 오류가 발생했습니다.'
         }
 
+# -----------------------------
 # 메인 애플리케이션
+# -----------------------------
 def main():
     # 헤더
     st.markdown('<div class="main-header">🎯 실전형 업무 시뮬레이터 for 신입</div>', unsafe_allow_html=True)
@@ -343,7 +402,6 @@ def main():
     # 사이드바 - 설정 및 문서 업로드
     with st.sidebar:
         st.header("📚 업무 매뉴얼 업로드")
-
         uploaded_files = st.file_uploader(
             "매뉴얼 파일들을 업로드하세요",
             type=['pdf', 'txt', 'xlsx', 'xls'],
@@ -351,37 +409,74 @@ def main():
             help="PDF, TXT, Excel 파일을 지원합니다"
         )
 
+        # 임베딩 학습 수준 설정
+        st.header("🧠 임베딩 설정")
+        embed_percent = st.slider(
+            "파일 임베딩 학습 수준 (%)",
+            min_value=20,
+            max_value=100,
+            value=100,
+            step=20,
+            help="매뉴얼 전체 텍스트 중 임베딩에 사용할 비율입니다."
+        )
+        st.session_state["embed_ratio"] = embed_percent / 100.0
+
+        # LLM 설정
         st.header("⚙️ AI 설정")
 
-        # Ollama 연결 확인
-        if 'ollama_connected' not in st.session_state:
-            with st.spinner("🔍 AI 시스템 연결 확인 중..."):
-                connected, result = check_ollama_connection()
-                st.session_state['ollama_connected'] = connected
-
-        if st.session_state['ollama_connected']:
-            st.success("✅ AI 시스템 연결됨")
-        else:
-            st.error("❌ AI 시스템 연결 실패")
-
-        model_name = st.selectbox(
-            "AI 모델 선택",
-            ["exaone3.5:2.4b-jetson", "llama3.2", "gemma2"],
-            index=0
+        llm_provider = st.selectbox(
+            "LLM 공급자",
+            options=["ollama", "openai", "gemini"],
+            format_func=lambda v: {
+                "ollama": "로컬(Ollama)",
+                "openai": "OpenAI GPT",
+                "gemini": "Google Gemini"
+            }[v]
         )
+        st.session_state["llm_provider"] = llm_provider
 
+        model_name = None
+
+        if llm_provider == "ollama":
+            if 'ollama_connected' not in st.session_state:
+                with st.spinner("🔍 로컬 Ollama 연결 확인 중..."):
+                    connected, result = check_ollama_connection()
+                    st.session_state['ollama_connected'] = connected
+
+            if st.session_state.get('ollama_connected', False):
+                st.success("✅ 로컬 Ollama 연결됨")
+            else:
+                st.warning("⚠️ Ollama 연결에 실패했습니다. 로컬 모델 사용 시 Ollama 서버를 확인하세요.")
+
+            model_name = st.selectbox(
+                "Ollama 모델 선택",
+                ["exaone3.5:2.4b-jetson", "llama3.2", "gemma2"],
+                index=0
+            )
+
+        elif llm_provider == "openai":
+            openai_key = st.text_input("OpenAI API Key", type="password")
+            st.session_state["openai_api_key"] = openai_key
+            model_name = st.text_input("OpenAI GPT 모델 이름", value="gpt-4.1-mini")
+
+        elif llm_provider == "gemini":
+            gemini_key = st.text_input("Gemini API Key", type="password")
+            st.session_state["gemini_api_key"] = gemini_key
+            model_name = st.text_input("Gemini 모델 이름", value="gemini-1.5-flash")
+
+        if model_name:
+            st.session_state["model_name"] = model_name
+
+        # 학습 통계
         st.header("📊 학습 통계")
-
-        # 세션 통계 초기화
         if 'stats' not in st.session_state:
             st.session_state.stats = {
                 'total_simulations': 0,
                 'customer_role_count': 0,
                 'employee_role_count': 0,
-                'avg_score': 0,
+                'avg_score': 0.0,
                 'total_score': 0
             }
-
         stats = st.session_state.stats
 
         st.markdown(f"""
@@ -409,22 +504,28 @@ def main():
                 if all_text:
                     st.success(f"✅ {len(uploaded_files)}개 파일 처리 완료!")
 
-                    # 지식 베이스 생성
                     embedding_model = init_embedding_model()
                     chunks = chunk_text(all_text)
-                    collection = create_knowledge_base(chunks, embedding_model)
+
+                    ratio = st.session_state.get("embed_ratio", 1.0)
+                    use_n = max(1, int(len(chunks) * ratio))
+                    chunks_to_use = chunks[:use_n]
+
+                    collection = create_knowledge_base(chunks_to_use, embedding_model)
 
                     st.session_state['knowledge_base'] = collection
                     st.session_state['embedding_model'] = embedding_model
                     st.session_state['manual_content'] = all_text
 
-                    st.info(f"📖 총 {len(chunks)}개 학습 단위로 분할 완료")
+                    st.info(
+                        f"📖 총 {len(chunks)}개 청크 중 {use_n}개를 임베딩했습니다. "
+                        f"(학습 수준 {int(ratio * 100)}%)"
+                    )
 
         # 시뮬레이션 섹션
         if 'knowledge_base' in st.session_state:
             st.markdown("---")
 
-            # 역할 선택
             col1, col2 = st.columns(2)
 
             with col1:
@@ -456,9 +557,8 @@ def main():
                     st.session_state.conversation_history = []
                     st.session_state.stats['employee_role_count'] += 1
 
-                    # 고객 시나리오 생성: 전체 매뉴얼 기반
                     manual_text = st.session_state.get('manual_content', '')
-                    scenario = generate_customer_scenario(manual_text, model_name)
+                    scenario = generate_customer_scenario(manual_text)
                     st.session_state.customer_scenario = scenario
 
                     st.rerun()
@@ -467,14 +567,11 @@ def main():
             if hasattr(st.session_state, 'simulation_active') and st.session_state.simulation_active:
                 st.markdown("---")
 
-                # 현재 역할 표시
                 if st.session_state.current_role == "customer":
                     st.markdown('<div class="role-badge customer-badge">👤 당신의 역할: 고객</div>', unsafe_allow_html=True)
                     st.markdown("**💡 상황:** AI 직원에게 문의사항을 말해보세요.")
                 else:
                     st.markdown('<div class="role-badge employee-badge">👔 당신의 역할: 직원</div>', unsafe_allow_html=True)
-
-                    # 고객 시나리오 표시
                     scenario = st.session_state.get('customer_scenario', {})
                     if scenario:
                         st.markdown(f"""
@@ -483,15 +580,13 @@ def main():
                         **💬 고객 첫 말:** "{scenario.get('first_message', '')}"
                         """)
 
-                # 대화 히스토리
                 if 'conversation_history' not in st.session_state:
                     st.session_state.conversation_history = []
 
-                # 직원 모드일 때 첫 고객 메시지 추가
-                if (st.session_state.current_role == "employee" and
-                    not st.session_state.conversation_history and
-                    'customer_scenario' in st.session_state):
-
+                # 직원 모드 첫 턴: 고객 첫 발화 자동 추가
+                if (st.session_state.current_role == "employee"
+                    and not st.session_state.conversation_history
+                    and 'customer_scenario' in st.session_state):
                     first_msg = st.session_state.customer_scenario.get('first_message', '')
                     if first_msg:
                         st.session_state.conversation_history.append({
@@ -515,20 +610,18 @@ def main():
                         with st.chat_message("assistant"):
                             st.markdown(f"**AI 고객:** {msg['message']}")
 
-                # 사용자 입력
+                # 입력창
                 if st.session_state.current_role == "customer":
                     user_input = st.chat_input("고객으로서 문의사항을 입력하세요...")
                 else:
                     user_input = st.chat_input("직원으로서 응답을 입력하세요...")
 
                 if user_input:
-                    # 사용자 메시지 추가 (고객/직원 공통)
                     st.session_state.conversation_history.append({
                         'role': 'user',
                         'message': user_input
                     })
 
-                    # 매뉴얼 기반 컨텍스트 검색
                     context = search_knowledge_base(
                         user_input,
                         st.session_state['knowledge_base'],
@@ -537,35 +630,26 @@ def main():
                     context_text = " ".join(context)
 
                     if st.session_state.current_role == "customer":
-                        # 👤 고객 역할: AI가 직원으로 응답
-                        ai_response = employee_ai_response(user_input, context_text, model_name)
+                        ai_response = employee_ai_response(user_input, context_text)
                         st.session_state.conversation_history.append({
                             'role': 'employee_ai',
                             'message': ai_response
                         })
-
                     else:
-                        # 👔 직원 역할: 내가 답변 → 평가 + 다음 고객 질문 자동 생성
-
-                        # 1) 내 답변 평가
-                        evaluation = evaluate_response(user_input, context_text, model_name)
+                        # 직원 모드: 답변 → 평가 → 새 질문
+                        evaluation = evaluate_response(user_input, context_text)
                         st.session_state.last_evaluation = evaluation
 
-                        # 2) 통계 업데이트
                         stats = st.session_state.stats
                         stats['total_score'] += evaluation['score']
                         stats['total_simulations'] += 1
-                        stats['avg_score'] = (
-                            stats['total_score'] / stats['total_simulations']
-                            if stats['total_simulations'] > 0 else 0
-                        )
+                        if stats['total_simulations'] > 0:
+                            stats['avg_score'] = stats['total_score'] / stats['total_simulations']
 
-                        # 3) 다음 고객 시나리오 생성 (전체 매뉴얼 기반)
                         manual_text = st.session_state.get('manual_content', '')
-                        next_scenario = generate_customer_scenario(manual_text, model_name)
+                        next_scenario = generate_customer_scenario(manual_text)
                         st.session_state.customer_scenario = next_scenario
 
-                        # 4) 새 고객의 "첫 말"을 바로 채팅창에 추가
                         next_first = next_scenario.get('first_message', '')
                         if next_first:
                             st.session_state.conversation_history.append({
@@ -575,35 +659,28 @@ def main():
 
                     st.rerun()
 
-                # 평가 결과 표시 (직원 모드)
-                if (st.session_state.current_role == "employee" and
-                    hasattr(st.session_state, 'last_evaluation')):
-
+                # 평가 결과 (직원 모드만)
+                if (st.session_state.current_role == "employee"
+                    and hasattr(st.session_state, 'last_evaluation')):
                     eval_data = st.session_state.last_evaluation
-
                     st.markdown("### 📊 응답 평가")
-
                     col_eval1, col_eval2 = st.columns([1, 2])
-
                     with col_eval1:
                         score_percentage = (eval_data['score'] / eval_data['max_score']) * 100
                         st.metric("점수", f"{eval_data['score']}/{eval_data['max_score']}", f"{score_percentage:.0f}%")
-
                     with col_eval2:
                         st.text_area("상세 피드백", eval_data['feedback'], height=100, disabled=True)
 
-                # 시뮬레이션 종료 버튼
+                # 종료 / 새 시나리오
                 col_end1, col_end2 = st.columns([1, 1])
                 with col_end1:
                     if st.button("🔄 새 시나리오 시작"):
                         st.session_state.conversation_history = []
                         if st.session_state.current_role == "employee":
-                            # 새로운 고객 시나리오 생성 (전체 매뉴얼 기반)
                             manual_text = st.session_state.get('manual_content', '')
-                            scenario = generate_customer_scenario(manual_text, model_name)
+                            scenario = generate_customer_scenario(manual_text)
                             st.session_state.customer_scenario = scenario
                         st.rerun()
-
                 with col_end2:
                     if st.button("❌ 시뮬레이션 종료"):
                         st.session_state.simulation_active = False
