@@ -241,7 +241,8 @@ def call_llm(prompt: str) -> str:
             genai.configure(api_key=api_key)
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
-            return response.text.strip()
+            text = getattr(response, "text", "") or ""
+            return text.strip()
         except Exception as e:
             st.error(f"Gemini 호출 중 오류: {e}")
             return ""
@@ -457,12 +458,34 @@ def main():
         elif llm_provider == "openai":
             openai_key = st.text_input("OpenAI API Key", type="password")
             st.session_state["openai_api_key"] = openai_key
-            model_name = st.text_input("OpenAI GPT 모델 이름", value="gpt-4.1-mini")
+
+            openai_models = [
+                "gpt-4.1-mini",
+                "gpt-4.1",
+                "gpt-4o-mini",
+                "gpt-4o",
+            ]
+            model_name = st.selectbox(
+                "OpenAI GPT 모델 선택",
+                options=openai_models,
+                index=0
+            )
 
         elif llm_provider == "gemini":
             gemini_key = st.text_input("Gemini API Key", type="password")
             st.session_state["gemini_api_key"] = gemini_key
-            model_name = st.text_input("Gemini 모델 이름", value="gemini-1.5-flash")
+
+            gemini_models = [
+                "gemini-2.5-flash",
+                "gemini-2.5-pro",
+                "gemini-1.5-flash",
+                "gemini-1.5-pro",
+            ]
+            model_name = st.selectbox(
+                "Gemini 모델 선택",
+                options=gemini_models,
+                index=0
+            )
 
         if model_name:
             st.session_state["model_name"] = model_name
