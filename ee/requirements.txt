@@ -6,3 +6,5 @@ sentence-transformers
 pandas
 openpyxl
 xlrd
+openai
+google-generativeai
