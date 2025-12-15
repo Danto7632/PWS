@@ -1,0 +1,142 @@
+@startuml CS_Simulator_DB_Schema
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Pretendard, -apple-system, sans-serif
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam linetype ortho
+
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #64748B
+    HeaderBackgroundColor #F1F5F9
+    FontColor #1E293B
+}
+
+title CS 업무 시뮬레이터 - 데이터베이스 스키마 (ERD)
+
+entity "**users**" as users {
+    * **id** : UUID <<PK>>
+    --
+    * email : VARCHAR(255) <<UNIQUE>>
+    * password : VARCHAR(255)
+    name : VARCHAR(100)
+    isVerified : BOOLEAN = false
+    refreshToken : VARCHAR(500)
+    --
+    //사용자 설정//
+    apiKeys : JSON
+    enabledModels : JSON
+    selectedModel : VARCHAR(50)
+    --
+    * createdAt : DATETIME
+    * updatedAt : DATETIME
+}
+
+entity "**projects**" as projects {
+    * **id** : UUID <<PK>>
+    --
+    * name : VARCHAR(255)
+    category : VARCHAR(100)
+    guidelines : TEXT
+    uploadPercentage : INT = 100
+    isExpanded : BOOLEAN = true
+    --
+    userId : UUID <<FK>>
+    --
+    * createdAt : DATETIME
+    * updatedAt : DATETIME
+}
+
+entity "**conversations**" as conversations {
+    * **id** : UUID <<PK>>
+    --
+    * title : VARCHAR(255)
+    preview : VARCHAR(500)
+    role : ENUM('customer', 'employee')
+    --
+    * projectId : UUID <<FK>>
+    --
+    * createdAt : DATETIME
+    * updatedAt : DATETIME
+}
+
+entity "**messages**" as messages {
+    * **id** : UUID <<PK>>
+    --
+    * role : ENUM('user', 'assistant')
+    * content : TEXT
+    --
+    * conversationId : UUID <<FK>>
+    --
+    * timestamp : DATETIME
+}
+
+entity "**project_files**" as project_files {
+    * **id** : UUID <<PK>>
+    --
+    * name : VARCHAR(255)
+    * type : VARCHAR(50)
+    * size : INT
+    embeddingFileId : VARCHAR(255)
+    --
+    * projectId : UUID <<FK>>
+    --
+    * createdAt : DATETIME
+}
+
+' ChromaDB (Vector Store)
+entity "**chromadb_collections**\n(Vector Store)" as chromadb <<external>> #FEF3C7 {
+    * **collection_name** : STRING
+    --
+    //Format: project_{projectId}_{userId}//
+    --
+    documents : TEXT[]
+    embeddings : FLOAT[][]
+    metadatas : JSON[]
+    ids : STRING[]
+}
+
+' Relationships
+users ||--o{ projects : "1:N\nuserId"
+projects ||--o{ conversations : "1:N\nprojectId"
+projects ||--o{ project_files : "1:N\nprojectId"
+conversations ||--o{ messages : "1:N\nconversationId"
+
+project_files ..> chromadb : "임베딩 저장\nembeddingFileId"
+
+note bottom of users
+  **apiKeys JSON 구조**
+  {
+    "gpt": "sk-...",
+    "gemini": "...",
+    "claude": "...",
+    "perplexity": "...",
+    "ollama": "http://..."
+  }
+end note
+
+note bottom of chromadb
+  **ChromaDB 컬렉션 명명 규칙**
+  project_{projectId}_{userId}
+  
+  사용자별 프로젝트별로
+  문서 임베딩 분리 저장
+end note
+
+note right of conversations
+  **role 설명**
+  - customer: 사용자가 고객 역할
+    (AI가 직원 역할)
+  - employee: 사용자가 직원 역할
+    (AI가 고객 역할)
+end note
+
+note right of messages
+  **role 설명**
+  - user: 사용자 입력 메시지
+  - assistant: AI 응답 메시지
+end note
+
+@enduml

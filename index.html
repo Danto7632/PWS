@@ -3,248 +3,685 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>김인성 포트폴리오 | 실전형 업무 시뮬레이터</title>
-    <!-- Tailwind CSS CDN --><script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons CDN --><script src="https://unpkg.com/lucide-icons"></script>
-    <!-- Google Font: Inter & Noto Sans KR --><link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
+    <title>CS 업무 시뮬레이터 - 포트폴리오</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Noto Sans KR (Korean) + Inter (English/Numbers) */
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --secondary: #f97316;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
         body {
-            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: var(--dark);
         }
-        /* 섹션 제목에 강조 색상 */
-        .section-title {
-            @apply text-3xl font-bold mb-6 text-teal-400 border-b-2 border-teal-600 pb-2;
+        
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        /* 카드 스타일 */
+        
         .card {
-            @apply bg-gray-800 p-7 rounded-2xl shadow-xl transition-all duration-300 ease-in-out hover:-translate-y-2 hover:shadow-2xl;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        /* 이미지 플레이스홀더 대비 */
-        img {
-            @apply bg-gray-700 rounded-lg;
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-        /* Hero 섹션 배경 그라데이션 */
-        #about::before {
+        
+        .tech-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .tech-badge:hover {
+            transform: scale(1.05);
+        }
+        
+        .tech-frontend { background: #dbeafe; color: #1d4ed8; }
+        .tech-backend { background: #dcfce7; color: #16a34a; }
+        .tech-ai { background: #fef3c7; color: #d97706; }
+        .tech-db { background: #f3e8ff; color: #9333ea; }
+        .tech-infra { background: #fee2e2; color: #dc2626; }
+        
+        .section-title {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 2rem;
+        }
+        
+        .section-title::after {
             content: '';
             position: absolute;
-            top: 0;
+            bottom: -8px;
             left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+        
+        .diagram-container {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: color 0.2s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.2s ease;
+        }
+        
+        .nav-link:hover::after {
             width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at top left, rgba(42, 53, 76, 0.4) 0%, transparent 40%),
-                        radial-gradient(circle at bottom right, rgba(29, 39, 58, 0.4) 0%, transparent 40%);
-            z-index: -1;
-            opacity: 0.7;
+        }
+        
+        .hero-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230ea5e9' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-nav {
+                display: none;
+            }
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-950 to-gray-900 text-gray-200 antialiased relative">
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="#" class="text-xl font-bold gradient-text">CS 업무 시뮬레이터</a>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#overview" class="nav-link text-gray-600 hover:text-gray-900">개요</a>
+                    <a href="#features" class="nav-link text-gray-600 hover:text-gray-900">주요 기능</a>
+                    <a href="#tech-stack" class="nav-link text-gray-600 hover:text-gray-900">기술 스택</a>
+                    <a href="#architecture" class="nav-link text-gray-600 hover:text-gray-900">아키텍처</a>
+                    <a href="#demo" class="nav-link text-gray-600 hover:text-gray-900">시연</a>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-    <!-- Main Content --><main class="container mx-auto max-w-7xl px-4 py-16 md:py-24">
+    <!-- Hero Section -->
+    <header class="hero-pattern pt-32 pb-20 px-4">
+        <div class="max-w-6xl mx-auto text-center">
+            <div class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-6">
+                <i class="fas fa-robot mr-2"></i>
+                AI 기반 교육 플랫폼
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                <span class="gradient-text">CS 업무 시뮬레이터</span>
+            </h1>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+                RAG 기반 AI와 함께하는 실전 고객 서비스 교육 플랫폼<br>
+                신입 직원의 빠른 업무 적응을 돕는 인터랙티브 시뮬레이션
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="https://www.youtube.com/watch?v=9wFu5BvlJm8" target="_blank" class="inline-flex items-center justify-center px-8 py-4 bg-red-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:bg-red-700 transition-all">
+                    <i class="fab fa-youtube mr-2"></i>
+                    시연 영상 보기
+                </a>
+                <a href="https://github.com/danto7632/PWS_V3" target="_blank" class="inline-flex items-center justify-center px-8 py-4 bg-gray-900 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all">
+                    <i class="fab fa-github mr-2"></i>
+                    GitHub 저장소
+                </a>
+            </div>
+        </div>
+    </header>
 
-        <!-- 1. 기본 정보 (Hero & About) --><section id="about" class="mb-20 md:mb-32 relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-900 to-gray-900 p-8 md:p-12 shadow-3xl">
-            <div class="flex flex-col md:flex-row items-center gap-10 md:gap-16 relative z-10">
-                <!-- 프로필 이미지 --><div class="flex-shrink-0">
-                    <img 
-                        src="images/profile_insung.jpeg" 
-                        alt="김인성 프로필 이미지" 
-                        class="w-40 h-40 md:w-56 md:h-56 rounded-full object-cover shadow-3xl border-4 border-teal-500 transform hover:scale-105 transition-transform duration-300"
-                        onerror="this.src='https://placehold.co/224x224/374151/A7F3D0?text=Inseong'"
-                    >
+    <!-- Overview Section -->
+    <section id="overview" class="py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold section-title">기획 배경 및 개요</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8 mt-8">
+                <div class="card p-8">
+                    <div class="feature-icon bg-red-100 text-red-600 mb-4">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">문제 인식</h3>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-red-500 mt-1 mr-3"></i>
+                            <span>신입 직원의 고객 응대 업무 적응에 평균 3~6개월 소요</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-red-500 mt-1 mr-3"></i>
+                            <span>실제 고객 대응 전 충분한 연습 기회 부족</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-red-500 mt-1 mr-3"></i>
+                            <span>기존 교육 방식(매뉴얼, 선배 동행)의 한계</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-red-500 mt-1 mr-3"></i>
+                            <span>업무 매뉴얼 기반 실전 시나리오 부재</span>
+                        </li>
+                    </ul>
                 </div>
                 
-                <!-- 소개 텍스트 --><div class="text-center md:text-left">
-                    <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-4 leading-tight">김인성</h1>
-                    <p class="text-xl md:text-2xl text-teal-300 font-semibold mb-7 tracking-wide">
-                        Python·Streamlit만으로 “메뉴얼→실전형 시뮬레이션”을 빠르게 구현하는 교육/업무적응 툴 메이커
-                    </p>
-                    
-                    <!-- 연락처 --><div class="flex flex-wrap justify-center md:justify-start gap-x-8 gap-y-4 mb-10 text-lg">
-                        <a href="mailto:rlarladlstjd@gmail.com" class="flex items-center text-gray-300 hover:text-teal-400 transition-colors duration-200">
-                            <i data-lucide="mail" class="w-6 h-6 mr-3"></i>
-                            <span class="font-medium">rlarladlstjd@gmail.com</span>
-                        </a>
-                        <a href="https://github.com/danto7632" target="_blank" rel="noopener noreferrer" class="flex items-center text-gray-300 hover:text-teal-400 transition-colors duration-200">
-                            <i data-lucide="github" class="w-6 h-6 mr-3"></i>
-                            <span class="font-medium">github.com/danto7632</span>
-                        </a>
-                        <span class="flex items-center text-gray-500 cursor-not-allowed">
-                            <i data-lucide="linkedin" class="w-6 h-6 mr-3"></i>
-                            <span class="font-medium">LinkedIn (추후 업데이트)</span>
+                <div class="card p-8">
+                    <div class="feature-icon bg-green-100 text-green-600 mb-4">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">해결 방안</h3>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>실제 업무 매뉴얼을 학습한 AI와 대화 시뮬레이션</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>RAG 기반 정확한 매뉴얼 참조 응답 생성</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>고객/직원 역할 전환으로 다양한 관점 학습</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-3"></i>
+                            <span>다양한 LLM 지원으로 유연한 환경 구성</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 px-4 bg-white">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold section-title">주요 기능</h2>
+            
+            <div class="grid md:grid-cols-3 gap-6 mt-8">
+                <div class="card p-6">
+                    <div class="feature-icon bg-blue-100 text-blue-600 mb-4">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">프로젝트 관리</h3>
+                    <p class="text-gray-600 text-sm">업무별 프로젝트 생성 및 매뉴얼 업로드, 지침 설정으로 체계적인 교육 환경 구성</p>
+                </div>
+                
+                <div class="card p-6">
+                    <div class="feature-icon bg-purple-100 text-purple-600 mb-4">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">문서 임베딩 (RAG)</h3>
+                    <p class="text-gray-600 text-sm">PDF, Excel, Word, TXT 파일을 벡터 DB에 저장하여 AI가 매뉴얼 기반 응답 생성</p>
+                </div>
+                
+                <div class="card p-6">
+                    <div class="feature-icon bg-orange-100 text-orange-600 mb-4">
+                        <i class="fas fa-theater-masks"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">역할 기반 시뮬레이션</h3>
+                    <p class="text-gray-600 text-sm">고객 역할(AI 직원과 대화) 또는 직원 역할(AI 고객 응대)로 양방향 학습</p>
+                </div>
+                
+                <div class="card p-6">
+                    <div class="feature-icon bg-green-100 text-green-600 mb-4">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">Multi-LLM 지원</h3>
+                    <p class="text-gray-600 text-sm">OpenAI, Gemini, Claude, Perplexity, Ollama 등 다양한 AI 모델 선택 가능</p>
+                </div>
+                
+                <div class="card p-6">
+                    <div class="feature-icon bg-pink-100 text-pink-600 mb-4">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">사용자 인증</h3>
+                    <p class="text-gray-600 text-sm">JWT 기반 로그인/회원가입, 사용자별 프로젝트 및 설정 분리 관리</p>
+                </div>
+                
+                <div class="card p-6">
+                    <div class="feature-icon bg-cyan-100 text-cyan-600 mb-4">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">대화 기록 관리</h3>
+                    <p class="text-gray-600 text-sm">모든 시뮬레이션 대화 저장, 복습 및 피드백 기능으로 학습 효과 극대화</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack Section -->
+    <section id="tech-stack" class="py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold section-title">기술 스택</h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                <!-- Frontend -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center">
+                        <span class="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                        Frontend
+                    </h3>
+                    <div class="flex flex-wrap">
+                        <span class="tech-badge tech-frontend"><i class="fab fa-react mr-2"></i>React 18</span>
+                        <span class="tech-badge tech-frontend"><i class="fas fa-code mr-2"></i>TypeScript</span>
+                        <span class="tech-badge tech-frontend"><i class="fas fa-bolt mr-2"></i>Vite</span>
+                        <span class="tech-badge tech-frontend"><i class="fas fa-wind mr-2"></i>Tailwind CSS</span>
+                        <span class="tech-badge tech-frontend"><i class="fas fa-palette mr-2"></i>shadcn/ui</span>
+                    </div>
+                </div>
+                
+                <!-- Backend -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center">
+                        <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                        Backend
+                    </h3>
+                    <div class="flex flex-wrap">
+                        <span class="tech-badge tech-backend"><i class="fab fa-node-js mr-2"></i>NestJS 10</span>
+                        <span class="tech-badge tech-backend"><i class="fas fa-code mr-2"></i>TypeScript</span>
+                        <span class="tech-badge tech-backend"><i class="fas fa-database mr-2"></i>TypeORM</span>
+                        <span class="tech-badge tech-backend"><i class="fas fa-key mr-2"></i>JWT Auth</span>
+                    </div>
+                </div>
+                
+                <!-- AI Service -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center">
+                        <span class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
+                        AI Service
+                    </h3>
+                    <div class="flex flex-wrap">
+                        <span class="tech-badge tech-ai"><i class="fab fa-python mr-2"></i>FastAPI</span>
+                        <span class="tech-badge tech-ai"><i class="fas fa-brain mr-2"></i>LangChain</span>
+                        <span class="tech-badge tech-ai"><i class="fas fa-vector-square mr-2"></i>ChromaDB</span>
+                        <span class="tech-badge tech-ai"><i class="fas fa-microchip mr-2"></i>SentenceTransformers</span>
+                    </div>
+                </div>
+                
+                <!-- Database -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center">
+                        <span class="w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+                        Database
+                    </h3>
+                    <div class="flex flex-wrap">
+                        <span class="tech-badge tech-db"><i class="fas fa-database mr-2"></i>MySQL</span>
+                        <span class="tech-badge tech-db"><i class="fas fa-cube mr-2"></i>ChromaDB</span>
+                    </div>
+                </div>
+                
+                <!-- LLM Providers -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center">
+                        <span class="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                        LLM Providers
+                    </h3>
+                    <div class="flex flex-wrap">
+                        <span class="tech-badge tech-infra"><i class="fas fa-robot mr-2"></i>OpenAI</span>
+                        <span class="tech-badge tech-infra"><i class="fas fa-gem mr-2"></i>Gemini</span>
+                        <span class="tech-badge tech-infra"><i class="fas fa-cloud mr-2"></i>Claude</span>
+                        <span class="tech-badge tech-infra"><i class="fas fa-server mr-2"></i>Ollama</span>
+                    </div>
+                </div>
+                
+                <!-- DevOps -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center">
+                        <span class="w-3 h-3 bg-gray-500 rounded-full mr-2"></span>
+                        DevOps
+                    </h3>
+                    <div class="flex flex-wrap">
+                        <span class="tech-badge" style="background: #f1f5f9; color: #475569;"><i class="fab fa-github mr-2"></i>GitHub Actions</span>
+                        <span class="tech-badge" style="background: #f1f5f9; color: #475569;"><i class="fas fa-file-code mr-2"></i>GitHub Pages</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section id="architecture" class="py-20 px-4 bg-white">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold section-title">시스템 아키텍처</h2>
+            
+            <div class="mt-8 diagram-container p-4">
+                <img src="./architecture.png" alt="시스템 아키텍처" class="w-full max-w-4xl mx-auto" onerror="this.style.display='none'; document.getElementById('arch-fallback').style.display='block';">
+                <pre id="arch-fallback" class="text-xs md:text-sm overflow-x-auto p-4" style="display:none;">
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              사용자 (Web Browser)                            │
+└─────────────────────────────────────┬───────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Frontend (React + TypeScript)                        │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │   Sidebar   │  │  ChatArea   │  │   Dialogs   │  │  Settings   │        │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘        │
+│                              :5173                                           │
+└─────────────────────────────────────┬───────────────────────────────────────┘
+                                      │ HTTP/REST
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Backend (NestJS)                                   │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │    Auth     │  │  Projects   │  │Conversations│  │   Messages  │        │
+│  │   Module    │  │   Module    │  │   Module    │  │   Module    │        │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘        │
+│                              :3001                                           │
+└──────────────┬──────────────────────────────────────┬───────────────────────┘
+               │                                      │
+               ▼                                      ▼
+┌──────────────────────────┐            ┌──────────────────────────────────────┐
+│     MySQL (TypeORM)      │            │        AI Service (FastAPI)          │
+│  ┌────────┐ ┌────────┐   │            │  ┌─────────────┐  ┌─────────────┐   │
+│  │ Users  │ │Projects│   │            │  │  RAG Engine │  │ LLM Router  │   │
+│  └────────┘ └────────┘   │            │  └─────────────┘  └─────────────┘   │
+│  ┌────────┐ ┌────────┐   │            │         │                │          │
+│  │Messages│ │ Files  │   │            │         ▼                ▼          │
+│  └────────┘ └────────┘   │            │  ┌───────────┐  ┌────────────────┐  │
+└──────────────────────────┘            │  │ ChromaDB  │  │ OpenAI/Gemini/ │  │
+                                        │  │(Vector DB)│  │ Claude/Ollama  │  │
+                                        │  └───────────┘  └────────────────┘  │
+                                        │              :8000                   │
+                                        └──────────────────────────────────────┘
+                </pre>
+            </div>
+            
+            <h3 class="text-2xl font-bold mt-12 mb-6">DB 스키마</h3>
+            <div class="diagram-container p-4">
+                <img src="./db-schema.png" alt="DB 스키마" class="w-full max-w-4xl mx-auto" onerror="this.style.display='none'; document.getElementById('db-fallback').style.display='block';">
+                <pre id="db-fallback" class="text-xs md:text-sm overflow-x-auto p-4" style="display:none;">
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                 USERS                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ PK │ id              │ UUID        │ 사용자 고유 ID                          │
+│    │ email           │ VARCHAR     │ 이메일 (UNIQUE)                         │
+│    │ password        │ VARCHAR     │ 비밀번호 (해시)                         │
+│    │ name            │ VARCHAR     │ 이름                                    │
+│    │ apiKeys         │ JSON        │ API 키 설정                             │
+│    │ enabledModels   │ JSON        │ 활성화된 모델                           │
+│    │ selectedModel   │ VARCHAR     │ 선택된 모델                             │
+│    │ createdAt       │ DATETIME    │ 생성일                                  │
+└────┴─────────────────┴─────────────┴─────────────────────────────────────────┘
+          │ 1:N
+          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                PROJECTS                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ PK │ id              │ UUID        │ 프로젝트 고유 ID                        │
+│ FK │ userId          │ UUID        │ 소유 사용자 ID                          │
+│    │ name            │ VARCHAR     │ 프로젝트 이름                           │
+│    │ guidelines      │ TEXT        │ 업무 지침                               │
+│    │ uploadPercentage│ INT         │ 파일 활용률                             │
+│    │ createdAt       │ DATETIME    │ 생성일                                  │
+└────┴─────────────────┴─────────────┴─────────────────────────────────────────┘
+          │ 1:N                              │ 1:N
+          ▼                                  ▼
+┌─────────────────────────────────┐  ┌─────────────────────────────────────────┐
+│         CONVERSATIONS           │  │              PROJECT_FILES              │
+├─────────────────────────────────┤  ├─────────────────────────────────────────┤
+│ PK │ id          │ UUID         │  │ PK │ id              │ UUID             │
+│ FK │ projectId   │ UUID         │  │ FK │ projectId       │ UUID             │
+│    │ title       │ VARCHAR      │  │    │ name            │ VARCHAR          │
+│    │ role        │ VARCHAR      │  │    │ type            │ VARCHAR          │
+│    │ preview     │ VARCHAR      │  │    │ size            │ INT              │
+│    │ createdAt   │ DATETIME     │  │    │ embeddingFileId │ VARCHAR          │
+└────┴─────────────┴──────────────┘  │    │ createdAt       │ DATETIME         │
+          │ 1:N                      └────┴─────────────────┴──────────────────┘
+          ▼
+┌─────────────────────────────────┐
+│            MESSAGES             │
+├─────────────────────────────────┤
+│ PK │ id             │ UUID      │
+│ FK │ conversationId │ UUID      │
+│    │ role           │ VARCHAR   │  ← 'user' | 'assistant'
+│    │ content        │ TEXT      │
+│    │ timestamp      │ DATETIME  │
+└────┴────────────────┴───────────┘
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Expected Effects Section -->
+    <section id="effects" class="py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold section-title">기대 효과</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8 mt-8">
+                <div class="card p-8">
+                    <h3 class="text-xl font-bold mb-6 flex items-center">
+                        <span class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-chart-line"></i>
                         </span>
-                    </div>
-
-                    <!-- 상세 소개 --><div class="space-y-5 text-gray-300 text-base md:text-lg leading-relaxed max-w-3xl">
-                        <p>
-                            저는 신규 입사자·아르바이트생이 <strong>짧은 시간에 실전처럼</strong> 배우도록, 종이/문서 메뉴얼을 바로 “대화형 시뮬레이션”으로 바꾸는 도구를 Python·Streamlit으로 만듭니다. 기획–설계–개발–운영을 한 흐름으로 묶고, <strong>즉시 피드백·재연습 루프</strong>를 중시합니다.
-                        </p>
-                        <p>
-                            본 프로젝트는 고객/직원 역할을 <strong>양방향</strong>으로 바꿔가며 연습하는 AI 시뮬레이터입니다. 매장/직무 메뉴얼을 업로드하면, 고객 질문을 생성하고(변형·응용 포함), 직원 답변의 정확성·친절도·정책 준수 여부를 자동 피드백합니다. 복잡한 인프라 대신 <strong>Streamlit 멀티페이지</strong> 구조로 빠르게 배포·운영할 수 있게 설계했습니다.
-                        </p>
-                    </div>
+                        업무 효율성 향상
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-3 mt-0.5 text-sm">✓</span>
+                            <div>
+                                <strong>교육 기간 단축</strong>
+                                <p class="text-gray-600 text-sm mt-1">기존 3~6개월 → 1~2개월로 신입 직원 업무 적응 기간 50% 이상 단축</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-3 mt-0.5 text-sm">✓</span>
+                            <div>
+                                <strong>24시간 학습 가능</strong>
+                                <p class="text-gray-600 text-sm mt-1">시간/장소 제약 없이 언제든 반복 연습 가능</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-3 mt-0.5 text-sm">✓</span>
+                            <div>
+                                <strong>교육 담당자 부담 감소</strong>
+                                <p class="text-gray-600 text-sm mt-1">AI가 기본 교육을 담당하여 선배 직원의 업무 부담 경감</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="card p-8">
+                    <h3 class="text-xl font-bold mb-6 flex items-center">
+                        <span class="w-10 h-10 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-graduation-cap"></i>
+                        </span>
+                        교육 품질 향상
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-3 mt-0.5 text-sm">✓</span>
+                            <div>
+                                <strong>일관된 교육 품질</strong>
+                                <p class="text-gray-600 text-sm mt-1">매뉴얼 기반 표준화된 응대 방법 학습</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-3 mt-0.5 text-sm">✓</span>
+                            <div>
+                                <strong>실전 대비 훈련</strong>
+                                <p class="text-gray-600 text-sm mt-1">다양한 고객 유형과 상황에 대한 시뮬레이션</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-3 mt-0.5 text-sm">✓</span>
+                            <div>
+                                <strong>즉각적인 피드백</strong>
+                                <p class="text-gray-600 text-sm mt-1">대화 기록 기반 자기 점검 및 개선점 파악</p>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- 2. 프로젝트 상세 --><section id="project-details" class="mb-20 md:mb-32">
-            <h2 class="text-4xl md:text-5xl font-extrabold text-white text-center mb-8">
-                실전형 업무 시뮬레이터 <span class="text-teal-400">for 신입</span>
-            </h2>
-            <p class="text-xl text-gray-400 text-center mb-16 md:mb-20">(고객응대 트레이닝)</p>
-
-            <!-- 프로젝트 메인 이미지 --><img 
-                src="images/cs_simulator_hero.png" 
-                alt="업무 시뮬레이터 메인 이미지" 
-                class="w-full h-auto rounded-3xl shadow-3xl mb-20 md:mb-28 border border-gray-700 object-cover"
-                onerror="this.src='https://placehold.co/1200x600/374151/A7F3D0?text=Project+Hero+Image'"
-            >
-
-            <!-- 문제 정의 & 기술 스택 --><div class="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-14 mb-20 md:mb-28">
-                <div class="card">
-                    <h3 class="section-title text-indigo-400 border-indigo-600">[문제 정의]</h3>
-                    <p class="text-gray-300 leading-relaxed text-base md:text-lg">
-                        신입은 전화/현장 응대 경험이 부족해 <strong>긴장·실수·응답 지연</strong>이 잦고, 메뉴얼은 “읽고 끝”인 경우가 많아 <strong>정책 준수/표현 톤</strong>이 일관되지 않습니다. 교육자는 <strong>반복 코칭</strong>에 시간이 부족하고 케이스 다양화도 어렵습니다. 이 프로젝트는 <strong>AI가 고객·직원 역할을 모두 수행</strong>하고, <strong>메뉴얼 기반+변형 질문</strong>으로 연습 난이도를 조절하며, <strong>자동 피드백</strong>으로 적응 시간을 단축합니다.
-                    </p>
-                </div>
-                <div class="card bg-gray-800 border border-gray-700">
-                    <h3 class="section-title text-indigo-400 border-indigo-600">[전체 기술 스택]</h3>
-                    <div class="space-y-4 text-base md:text-lg">
-                        <p><strong class="text-teal-300">프론트엔드:</strong> <br><span class="text-gray-300">Streamlit(Python UI), Markdown 렌더링, 필요 최소 HTML/CSS 커스터마이징, Plotly(로그/지표 시각화)</span></p>
-                        <p><strong class="text-teal-300">백엔드:</strong> <br><span class="text-gray-300">Python 3.11, Streamlit Session State, SQLite(기본) / PostgreSQL(선택), SQLAlchemy, Pydantic</span></p>
-                        <p><strong class="text-teal-300">DevOps & Tools:</strong> <br><span class="text-gray-300">Git/GitHub, Streamlit Community Cloud(또는 EC2 Docker), OpenAI/Exaone 연동 어댑터, 간단 RAG(FAISS/Chroma 선택), pytest, Black/Ruff</span></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 아키텍처 --><div class="mb-20 md:mb-28">
-                <h3 class="section-title text-indigo-400 border-indigo-600">[아키텍처/설계]</h3>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-14 items-center">
-                    <div>
-                        <p class="text-gray-300 leading-relaxed mb-6 text-base md:text-lg">
-                            단일 코드베이스의 <strong>Streamlit 멀티페이지 앱</strong> 구조를 채택하여 효율적인 개발과 배포를 목표로 합니다.
-                        </p>
-                        <ul class="list-disc list-inside space-y-3 text-gray-300 text-base md:text-lg pl-4">
-                            <li><strong>자료 업로드/지식화:</strong> 매장/직무 메뉴얼 업로드 → 간단 임베딩 인덱스(FAISS/Chroma 선택) → RAG 컨텍스트 구성</li>
-                            <li><strong>시뮬레이션:</strong> (모드 A) <strong>AI=고객</strong>, 사용자가 직원으로 응답 / (모드 B) <strong>AI=직원</strong>, 사용자가 고객 질문</li>
-                            <li><strong>피드백:</strong> 규칙 체크(금지어/정책 누락/금액·절차 오류) + LLM 루브릭(정확성·친절도·컴플라이언스) → 항목별 코멘트/재연습 가이드</li>
-                            <li><strong>데이터 저장:</strong> SQLite(기본) 또는 PostgreSQL(선택)로 시나리오·대화로그·점수·재시도 이력 관리</li>
-                            <li><strong>배포/운영:</strong> Streamlit Cloud(간편) 또는 Docker+EC2(사내 배포). 모델 어댑터는 <strong>교체형 인터페이스</strong>(OpenAI/Exaone).</li>
-                        </ul>
-                    </div>
-                    <img 
-                        src="images/cs_simulator_streamlit_arch.png" 
-                        alt="Streamlit 아키텍처 다이어그램" 
-                        class="w-full h-auto rounded-xl shadow-2xl border border-gray-700 object-cover"
-                        onerror="this.src='https://placehold.co/600x400/374151/A7F3D0?text=Architecture+Diagram'"
-                    >
-                </div>
-            </div>
-
-            <!-- 핵심 기능 --><div class="mb-20 md:mb-28">
-                <h3 class="section-title text-center text-indigo-400 border-indigo-600">[핵심 기능]</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
-                    <!-- 기능 1 --><div class="card flex flex-col">
+    <!-- Demo Section -->
+    <section id="demo" class="py-20 px-4 bg-white">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold section-title">시연 영상</h2>
+            
+            <div class="mt-8 card overflow-hidden">
+                <a href="https://www.youtube.com/watch?v=9wFu5BvlJm8" target="_blank" class="block relative group">
+                    <div class="aspect-w-16 aspect-h-9" style="padding-top: 56.25%; position: relative;">
                         <img 
-                            src="images/ai_customer_mode.png" 
-                            alt="AI 고객 모드 스크린샷" 
-                            class="w-full h-52 object-cover rounded-lg mb-5 shadow-md border border-gray-700"
-                            onerror="this.src='https://placehold.co/400x200/374151/A7F3D0?text=Feature+1+Screenshot'"
+                            src="https://img.youtube.com/vi/9wFu5BvlJm8/maxresdefault.jpg" 
+                            alt="CS 업무 시뮬레이터 시연 영상 썸네일"
+                            class="absolute inset-0 w-full h-full object-cover"
+                            onerror="this.src='https://img.youtube.com/vi/9wFu5BvlJm8/hqdefault.jpg'"
                         >
-                        <h4 class="text-xl font-bold text-white mb-3">고객 역할 AI 시뮬레이션</h4>
-                        <p class="text-gray-300 text-base leading-relaxed flex-grow">
-                            챗봇 형식으로 <strong>다양한 고객 페르소나·상황</strong>을 생성(예: 초기 불만/환불/재고 문의/예약 변경). 메뉴얼 근거로 <strong>정답 범위</strong>를 유지하면서, <strong>표현만 변형</strong>된 응용 질문을 섞어 <strong>암기식 대응을 방지</strong>합니다. 난이도(톤/압박감/정보 누락 정도)와 주제 태그로 세션을 구성합니다.
-                        </p>
-                    </div>
-                    <!-- 기능 2 --><div class="card flex flex-col">
-                        <img 
-                            src="images/ai_staff_mode.png" 
-                            alt="AI 직원 모드 스크린샷" 
-                            class="w-full h-52 object-cover rounded-lg mb-5 shadow-md border border-gray-700"
-                            onerror="this.src='https://placehold.co/400x200/374151/A7F3D0?text=Feature+2+Screenshot'"
-                        >
-                        <h4 class="text-xl font-bold text-white mb-3">직원 역할 AI 응대 기능</h4>
-                        <p class="text-gray-300 text-base leading-relaxed flex-grow">
-                            사용자가 <strong>고객</strong>이 되어 질문하면, AI가 <strong>메뉴얼 준수형 직원 응답</strong>을 생성합니다. <strong>절차/정책/요금</strong>을 자동 참조하고, <strong>사과/공감 템플릿</strong>을 톤 가이드에 맞춰 반영합니다. 사용자는 <strong>고객 관점</strong>에서 바람직한 응대 흐름을 체험하고, <strong>좋은 답변의 구조</strong>를 학습합니다.
-                        </p>
-                    </div>
-                    <!-- 기능 3 --><div class="card flex flex-col justify-between">
-                        <!-- 이 기능은 이미지가 없으므로 아이콘과 텍스트만 표시합니다. --><div class="text-center mb-5">
-                            <i data-lucide="refresh-cw" class="w-16 h-16 mx-auto text-teal-400 mb-4 animate-spin-slow"></i>
+                        <div class="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
+                            <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                <i class="fab fa-youtube text-white text-4xl"></i>
+                            </div>
                         </div>
-                        <h4 class="text-xl font-bold text-white mb-3">역할 전환·재연습 루프</h4>
-                        <p class="text-gray-300 text-base leading-relaxed flex-grow">
-                            버튼 한 번으로 <strong>고객↔직원</strong> 전환. 세션 종료 시 <strong>항목별 점수+코칭 포인트</strong> 제공, 부족 영역만 <strong>퀵 재연습</strong>(동일 의도·다른 문장) 지원. 누적 지표(정확성/톤/정책 준수)와 <strong>최근 3회 개선율</strong>을 카드로 표시하여 학습 효과를 극대화합니다.
-                        </p>
+                        <div class="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-3 py-1 rounded text-sm">
+                            <i class="fas fa-external-link-alt mr-1"></i> YouTube에서 보기
+                        </div>
                     </div>
+                </a>
+            </div>
+            
+            <div class="mt-8 grid md:grid-cols-3 gap-4">
+                <div class="card p-4 text-center">
+                    <i class="fas fa-clock text-2xl text-blue-500 mb-2"></i>
+                    <p class="font-semibold">영상 길이</p>
+                    <p class="text-gray-600 text-sm">약 5분</p>
+                </div>
+                <div class="card p-4 text-center">
+                    <i class="fas fa-list-ol text-2xl text-purple-500 mb-2"></i>
+                    <p class="font-semibold">주요 내용</p>
+                    <p class="text-gray-600 text-sm">프로젝트 생성 → 파일 업로드 → 시뮬레이션</p>
+                </div>
+                <div class="card p-4 text-center">
+                    <i class="fas fa-eye text-2xl text-green-500 mb-2"></i>
+                    <p class="font-semibold">시연 환경</p>
+                    <p class="text-gray-600 text-sm">로컬 개발 환경 (GPT-4o)</p>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <!-- 나의 역할 & 성과 --><div class="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-14 mb-20 md:mb-28">
-                <div class="card">
-                    <h3 class="section-title text-indigo-400 border-indigo-600">[나의 역할 및 기여]</h3>
-                    <ul class="list-disc list-inside space-y-3 text-gray-300 text-base md:text-lg pl-4">
-                        <li>Streamlit 멀티페이지 설계(업로드→시뮬레이션→피드백→통계), 상태관리(Session State) 구현</li>
-                        <li>메뉴얼 RAG 파이프라인(간단 임베딩 인덱스, 섹션/정책 태깅) 및 <strong>루브릭 스키마</strong> 정의</li>
-                        <li>금지어/누락 항목 등 <strong>규칙 검증</strong> + LLM 루브릭 평가 병합 로직, 피드백 뷰(항목별 코멘트/개선 TODO)</li>
-                        <li>배포 스크립트(Streamlit Cloud/EC2 Docker) 및 데이터 마이그레이션 가이드 정리</li>
-                    </ul>
-                </div>
-                <div class="card bg-gradient-to-br from-teal-900/30 to-indigo-900/30 border border-teal-700">
-                    <h3 class="section-title text-teal-300 border-teal-600">[결과 및 성과]</h3>
-                    <ul class="list-disc list-inside space-y-3 text-gray-200 text-base md:text-lg pl-4">
-                        <li>파일럿 목표: <strong>초기 응답 시간 30% 단축</strong>, <strong>정책 누락률 40%↓</strong>, <strong>재연습 3회 내 합격률 80%+</strong> <span class="text-sm text-gray-400 font-normal">(초기 지표 수집 예정)</span></li>
-                        <li>교육자 관점: <strong>개별 코칭 시간 절감</strong>, <strong>케이스 다양화 자동화</strong>, 교육 로그로 <strong>현황 파악 용이</strong></li>
-                        <li>학습자 관점: <strong>긴장 완화</strong>, <strong>자신감 향상</strong>, <strong>표현 톤 표준화</strong> 및 <strong>에스컬레이션 기준 명확화</strong></li>
-                    </ul>
-                </div>
+    <!-- Links Section -->
+    <section id="links" class="py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold section-title">관련 링크</h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+                <a href="https://github.com/danto7632/PWS_V3" target="_blank" class="card p-6 text-center hover:bg-gray-50 transition-colors">
+                    <i class="fab fa-github text-4xl text-gray-800 mb-4"></i>
+                    <h3 class="font-bold">GitHub Repository</h3>
+                    <p class="text-gray-600 text-sm mt-2">소스 코드 저장소</p>
+                </a>
+                
+                <a href="https://danto7632.github.io/PWS_V3/" target="_blank" class="card p-6 text-center hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-globe text-4xl text-blue-500 mb-4"></i>
+                    <h3 class="font-bold">Live Demo</h3>
+                    <p class="text-gray-600 text-sm mt-2">배포된 프론트엔드</p>
+                </a>
+                
+                <a href="#" class="card p-6 text-center hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-book text-4xl text-green-500 mb-4"></i>
+                    <h3 class="font-bold">API Documentation</h3>
+                    <p class="text-gray-600 text-sm mt-2">Swagger API 문서</p>
+                </a>
+                
+                <a href="#" class="card p-6 text-center hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-file-alt text-4xl text-purple-500 mb-4"></i>
+                    <h3 class="font-bold">Project Wiki</h3>
+                    <p class="text-gray-600 text-sm mt-2">상세 문서 (준비 중)</p>
+                </a>
             </div>
+        </div>
+    </section>
 
-            <!-- 회고 --><div>
-                <h3 class="section-title text-center text-indigo-400 border-indigo-600">[회고]</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14">
-                    <div class="card">
-                        <h4 class="text-xl font-bold text-white mb-4 flex items-center"><i data-lucide="lightbulb" class="w-6 h-6 mr-3 text-yellow-400"></i> 배운 점</h4>
-                        <p class="text-gray-300 leading-relaxed text-base md:text-lg">
-                            <strong>메뉴얼의 구조화(정책/예외/톤 가이드 분리)</strong>가 모델 품질보다 중요합니다. 질문을 “의도·정책·감정 톤”으로 태깅하니 난이도 조절과 피드백 명확성이 크게 개선되었습니다. 또한 <strong>Streamlit만으로도</strong> 운영 가능한 속도로 MVP→수업 투입까지 연결할 수 있었습니다.
-                        </p>
-                    </div>
-                    <div class="card">
-                        <h4 class="text-xl font-bold text-white mb-4 flex items-center"><i data-lucide="trending-up" class="w-6 h-6 mr-3 text-green-400"></i> 개선점</h4>
-                        <p class="text-gray-300 leading-relaxed text-base md:text-lg">
-                            음성(STT/TTS) 모드, <strong>상황 카드 에디터</strong>(비매너/컴플레인 시나리오 조합), <strong>현장 KPI 연동</strong>(CS 만족/콜백률)과 <strong>개인화 난이도 곡선</strong>(최근 오류 태그 기반)을 추가해 실전 적합도를 더 높일 계획입니다.
-                        </p>
-                    </div>
-                </div>
+    <!-- Footer -->
+    <footer class="py-12 px-4 bg-gray-900 text-white">
+        <div class="max-w-6xl mx-auto text-center">
+            <h3 class="text-2xl font-bold gradient-text mb-4">CS 업무 시뮬레이터</h3>
+            <p class="text-gray-400 mb-6">AI 기반 고객 서비스 교육 플랫폼</p>
+            <div class="flex justify-center space-x-6 mb-8">
+                <a href="https://github.com/danto7632" target="_blank" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fab fa-github text-2xl"></i>
+                </a>
+                <a href="mailto:your-email@example.com" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-envelope text-2xl"></i>
+                </a>
+                <a href="https://linkedin.com/in/your-profile" target="_blank" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fab fa-linkedin text-2xl"></i>
+                </a>
             </div>
-
-        </section>
-    </main>
-
-    <!-- Footer --><footer class="text-center py-10 mt-16 border-t border-gray-800 bg-gray-950">
-        <p class="text-gray-500 text-sm">
-            &copy; 2024 Inseong Kim. All rights reserved. Made with <span class="text-red-500">&hearts;</span> and <span class="text-blue-400">Tailwind CSS</span>.
-        </p>
+            <p class="text-gray-500 text-sm">
+                © 2024 CS 업무 시뮬레이터. All rights reserved.
+            </p>
+        </div>
     </footer>
 
-    <!-- Lucide Icons Initializer --><script>
-        lucide.createIcons();
-    </script>
-     <script>
-        // 간단한 스크롤 애니메이션 (선택 사항)
+    <script>
+        // Smooth scroll for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             });
         });
-    </script>
 
+        // Navbar background on scroll
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-md');
+            } else {
+                nav.classList.remove('shadow-md');
+            }
+        });
+    </script>
 </body>
 </html>

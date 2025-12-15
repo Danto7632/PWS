@@ -1,0 +1,113 @@
+@startuml CS_Simulator_Architecture
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam componentStyle rectangle
+skinparam defaultFontName Pretendard, -apple-system, sans-serif
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundcorner 10
+
+skinparam component {
+    BackgroundColor<<frontend>> #DBEAFE
+    BorderColor<<frontend>> #3B82F6
+    BackgroundColor<<backend>> #DCFCE7
+    BorderColor<<backend>> #22C55E
+    BackgroundColor<<ai>> #FEF3C7
+    BorderColor<<ai>> #F59E0B
+    BackgroundColor<<db>> #F3E8FF
+    BorderColor<<db>> #A855F7
+    BackgroundColor<<external>> #FEE2E2
+    BorderColor<<external>> #EF4444
+}
+
+title CS 업무 시뮬레이터 - 시스템 아키텍처
+
+actor "사용자" as User
+
+package "Frontend (React + TypeScript)" <<frontend>> {
+    component "Sidebar\n프로젝트/대화 관리" as Sidebar
+    component "ChatArea\n채팅 인터페이스" as ChatArea
+    component "Dialogs\n모달 컴포넌트" as Dialogs
+    component "API Service\nHTTP 클라이언트" as APIService
+}
+
+package "Backend (NestJS)" <<backend>> {
+    component "Auth Module\nJWT 인증" as AuthModule
+    component "Projects Module\n프로젝트 CRUD" as ProjectsModule
+    component "Conversations Module\n대화 관리" as ConversationsModule
+    component "Messages Module\n메시지 관리" as MessagesModule
+    component "Files Module\n파일 메타데이터" as FilesModule
+    component "AI Module\n프록시" as AIModule
+}
+
+package "AI Service (FastAPI)" <<ai>> {
+    component "File Processor\n문서 파싱" as FileProcessor
+    component "Embedding Engine\nSentenceTransformers" as EmbeddingEngine
+    component "RAG Engine\n컨텍스트 검색" as RAGEngine
+    component "LLM Router\n모델 라우팅" as LLMRouter
+}
+
+database "MySQL" <<db>> {
+    component "Users" as UsersDB
+    component "Projects" as ProjectsDB
+    component "Conversations" as ConversationsDB
+    component "Messages" as MessagesDB
+    component "Files" as FilesDB
+}
+
+database "ChromaDB" <<db>> {
+    component "Vector Store\n문서 임베딩" as VectorStore
+}
+
+cloud "LLM Providers" <<external>> {
+    component "OpenAI\nGPT-4o, GPT-4-turbo" as OpenAI
+    component "Google\nGemini Pro, Flash" as Google
+    component "Anthropic\nClaude 3" as Anthropic
+    component "Ollama\n로컬 LLM" as Ollama
+}
+
+' User interactions
+User --> Sidebar : 프로젝트/대화 선택
+User --> ChatArea : 메시지 입력
+User --> Dialogs : 설정 변경
+
+' Frontend to Backend
+APIService --> AuthModule : 인증
+APIService --> ProjectsModule : 프로젝트
+APIService --> ConversationsModule : 대화
+APIService --> MessagesModule : 메시지
+APIService --> AIModule : AI 요청
+
+' Backend to Database
+AuthModule --> UsersDB
+ProjectsModule --> ProjectsDB
+ConversationsModule --> ConversationsDB
+MessagesModule --> MessagesDB
+FilesModule --> FilesDB
+
+' Backend to AI Service
+AIModule --> FileProcessor : 파일 업로드
+AIModule --> RAGEngine : 검색 요청
+AIModule --> LLMRouter : 채팅 요청
+
+' AI Service internal
+FileProcessor --> EmbeddingEngine : 텍스트 추출
+EmbeddingEngine --> VectorStore : 임베딩 저장
+RAGEngine --> VectorStore : 유사도 검색
+LLMRouter --> RAGEngine : 컨텍스트 조회
+
+' LLM connections
+LLMRouter --> OpenAI
+LLMRouter --> Google
+LLMRouter --> Anthropic
+LLMRouter --> Ollama
+
+note right of User
+  **포트 정보**
+  Frontend: 5173
+  Backend: 3001
+  AI Service: 8000
+end note
+
+@enduml

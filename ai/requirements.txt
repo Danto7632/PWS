@@ -1,0 +1,10 @@
+streamlit
+ollama
+PyPDF2
+chromadb
+sentence-transformers
+pandas
+openpyxl
+xlrd
+openai
+google-generativeai
